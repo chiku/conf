@@ -2,6 +2,7 @@ package conf_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"runtime"
@@ -16,25 +17,6 @@ const (
 	env      = "Environment"
 	defaults = "Defaults"
 )
-
-func TestLoadFromJSON(t *testing.T) {
-	const man = "man:json"
-	const opt = "opt:json"
-
-	loader := &conf.MultiLoader{
-		JSON: fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, man, opt),
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
-	}
-	config, origin, err := loader.Load()
-
-	requireNoError(t, err, "Expected no error loading conf")
-
-	assertEqual(t, config["man"], man, "Expected mandatory JSON config to be extracted")
-	assertEqual(t, config["opt"], opt, "Expected optional JSON config to be extracted")
-	assertEqual(t, origin["man"], json, "Expected mandatory config to be provided by JSON")
-	assertEqual(t, origin["opt"], json, "Expected optional config to be provided by JSON")
-}
 
 func TestLoadFromFlags(t *testing.T) {
 	const man = "man:flags"
@@ -53,6 +35,28 @@ func TestLoadFromFlags(t *testing.T) {
 	assertEqual(t, config["opt"], opt, "Expected optional flags config to be extracted")
 	assertEqual(t, origin["man"], flags, "Expected mandatory config to be provided by flags")
 	assertEqual(t, origin["opt"], flags, "Expected optional config to be provided by flags")
+}
+
+func TestLoadFromJSON(t *testing.T) {
+	const man = "man:json"
+	const opt = "opt:json"
+
+	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, man, opt)
+	jsonFile := tempFile(t, content)
+	loader := &conf.MultiLoader{
+		JSONKey:   "conf",
+		Args:      []string{"-conf", jsonFile},
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+	}
+	config, origin, err := loader.Load()
+
+	requireNoError(t, err, "Expected no error loading conf")
+
+	assertEqual(t, config["man"], man, "Expected mandatory JSON config to be extracted")
+	assertEqual(t, config["opt"], opt, "Expected optional JSON config to be extracted")
+	assertEqual(t, origin["man"], json, "Expected mandatory config to be provided by JSON")
+	assertEqual(t, origin["opt"], json, "Expected optional config to be provided by JSON")
 }
 
 func TestLoadFromEnvironment(t *testing.T) {
@@ -108,7 +112,7 @@ func requireNoError(t *testing.T, err error, msg string) {
 		fileBase := path.Base(file)
 
 		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
-		fmt.Printf("\t%v:%v: %s\n", fileBase, line, err.Error())
+		fmt.Printf("\t%v:%v: %s\n\n", fileBase, line, err.Error())
 		t.FailNow()
 	}
 }
@@ -119,7 +123,18 @@ func assertEqual(t *testing.T, actual, expected, msg string) {
 		fileBase := path.Base(file)
 
 		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
-		fmt.Printf("\t%v:%v: %#v != %#v\n", fileBase, line, actual, expected)
+		fmt.Printf("\t%v:%v: %#v != %#v\n\n", fileBase, line, actual, expected)
 		t.Fail()
 	}
+}
+
+func tempFile(t *testing.T, content string) string {
+	tmpfile, err := ioutil.TempFile("", "example")
+	requireNoError(t, err, "Expected no error creating temporary file")
+	_, err = tmpfile.Write([]byte(content))
+	requireNoError(t, err, "Expected no error writing to temporary file")
+	err = tmpfile.Close()
+	requireNoError(t, err, "Expected no error closing temporary file")
+
+	return tmpfile.Name()
 }

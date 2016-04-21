@@ -3,6 +3,7 @@ package conf
 import (
 	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"os"
 )
 
@@ -14,7 +15,7 @@ const (
 )
 
 type MultiLoader struct {
-	JSON      string
+	JSONKey   string
 	Mandatory []string
 	Optional  []string
 	Defaults  map[string]string
@@ -25,14 +26,6 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	config = make(map[string]string)
 	origin = make(map[string]string)
 
-	_ = json.Unmarshal([]byte(l.JSON), &config)
-	for _, item := range l.Mandatory {
-		origin[item] = JSON
-	}
-	for _, item := range l.Optional {
-		origin[item] = JSON
-	}
-
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
 	flagVals := make(map[string]*string)
 	for _, item := range l.Mandatory {
@@ -41,6 +34,12 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	for _, item := range l.Optional {
 		flagVals[item] = flags.String(item, "", item)
 	}
+
+	var jsonFile *string
+	if l.JSONKey != "" {
+		jsonFile = flags.String(l.JSONKey, "", "JSON configuration file")
+	}
+
 	_ = flags.Parse(l.Args)
 	for _, item := range l.Mandatory {
 		if config[item] == "" {
@@ -52,6 +51,25 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 		if config[item] == "" {
 			config[item] = *flagVals[item]
 			origin[item] = Flag
+		}
+	}
+
+	var jsonConfig map[string]string
+	if jsonFile != nil {
+		jsonContent, _ := ioutil.ReadFile(*jsonFile)
+		_ = json.Unmarshal(jsonContent, &jsonConfig)
+	}
+
+	for _, item := range l.Mandatory {
+		if config[item] == "" {
+			config[item] = jsonConfig[item]
+			origin[item] = JSON
+		}
+	}
+	for _, item := range l.Optional {
+		if config[item] == "" {
+			config[item] = jsonConfig[item]
+			origin[item] = JSON
 		}
 	}
 
