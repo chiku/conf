@@ -7,13 +7,6 @@ import (
 	"os"
 )
 
-const (
-	JSON     = "JSON"
-	Flag     = "Flags"
-	Env      = "Environment"
-	Defaults = "Defaults"
-)
-
 type MultiLoader struct {
 	JSONKey   string
 	Mandatory []string
@@ -41,18 +34,6 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	}
 
 	_ = flags.Parse(l.Args)
-	for _, item := range l.Mandatory {
-		if config[item] == "" {
-			config[item] = *flagVals[item]
-			origin[item] = Flag
-		}
-	}
-	for _, item := range l.Optional {
-		if config[item] == "" {
-			config[item] = *flagVals[item]
-			origin[item] = Flag
-		}
-	}
 
 	var jsonConfig map[string]string
 	if jsonFile != nil {
@@ -60,44 +41,27 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 		_ = json.Unmarshal(jsonContent, &jsonConfig)
 	}
 
-	for _, item := range l.Mandatory {
-		if config[item] == "" {
-			config[item] = jsonConfig[item]
-			origin[item] = JSON
-		}
-	}
-	for _, item := range l.Optional {
-		if config[item] == "" {
-			config[item] = jsonConfig[item]
-			origin[item] = JSON
-		}
-	}
-
-	for _, item := range l.Mandatory {
-		if config[item] == "" {
-			config[item] = os.Getenv(item)
-			origin[item] = Env
-		}
-	}
-	for _, item := range l.Optional {
-		if config[item] == "" {
-			config[item] = os.Getenv(item)
-			origin[item] = Env
-		}
-	}
-
-	for _, item := range l.Mandatory {
-		if config[item] == "" {
-			config[item] = l.Defaults[item]
-			origin[item] = Defaults
-		}
-	}
-	for _, item := range l.Optional {
-		if config[item] == "" {
-			config[item] = l.Defaults[item]
-			origin[item] = Defaults
-		}
-	}
+	l.configure(config, origin, func(key string) string { return *flagVals[key] }, "Flags")
+	l.configure(config, origin, func(key string) string { return jsonConfig[key] }, "JSON")
+	l.configure(config, origin, func(key string) string { return os.Getenv(key) }, "Environment")
+	l.configure(config, origin, func(key string) string { return l.Defaults[key] }, "Defaults")
 
 	return config, origin, err
+}
+
+type mappingFunc func(key string) (value string)
+
+func (l MultiLoader) configure(config map[string]string, origin map[string]string, mapping mappingFunc, from string) {
+	for _, item := range l.Mandatory {
+		if config[item] == "" {
+			config[item] = mapping(item)
+			origin[item] = from
+		}
+	}
+	for _, item := range l.Optional {
+		if config[item] == "" {
+			config[item] = mapping(item)
+			origin[item] = from
+		}
+	}
 }
