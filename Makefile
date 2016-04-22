@@ -12,32 +12,41 @@ SHELL := bash
 .DELETE_ON_ERROR:
 .SUFFIXES:
 
-.PHONY: all prereq fmt vet test clean
+MKDIR = mkdir -p
+RM = rm -rvf
+GO = go
+GLIDE = glide
 
 sources := $(wildcard *.go)
 
+.PHONY: all
 all: prereq fmt vet test
 
+.PHONY: prereq
 prereqs:
-	glide install
+	${GLIDE} install
 
+.PHONY: fmt
 fmt:
-	go fmt
+	${GO} fmt
 
+.PHONY: vet
 vet:
-	go vet
+	${GO} vet
 
-test: out/coverage.html
+.PHONY: test
+test: coverage/coverage.html
 
-out:
-	mkdir -p out
+coverage:
+	${MKDIR} coverage
 
+.PHONY: clean
 clean:
-	rm -rfv out
+	${RM} coverage
 
-out/coverage.out: $(sources) out
-	go test -coverprofile=out/coverage.out
+coverage/coverage.out: $(sources) coverage
+	${GO} test -coverprofile=coverage/coverage.out
 
-out/coverage.html: $(sources) out/coverage.out
-	go tool cover -func=out/coverage.out
-	go tool cover -html=out/coverage.out -o out/coverage.html
+coverage/coverage.html: coverage/coverage.out
+	${GO} tool cover -func=coverage/coverage.out
+	${GO} tool cover -html=coverage/coverage.out -o coverage/coverage.html
