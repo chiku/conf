@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 
 	"github.com/chiku/conf"
@@ -44,7 +46,7 @@ func TestLoadFromFlags(t *testing.T) {
 }
 
 func TestLoadFromJSON(t *testing.T) {
-	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, manj, optj)
+	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s" }`, manj, optj)
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
@@ -103,7 +105,7 @@ func TestLoadFromDefaults(t *testing.T) {
 }
 
 func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
-	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, manj, optj)
+	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s" }`, manj, optj)
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
@@ -132,7 +134,7 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 }
 
 func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
-	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, manj, optj)
+	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s" }`, manj, optj)
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
@@ -184,6 +186,72 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 	assertEqual(t, origin["opt"], env, "Expected optional config to be provided by environment")
 }
 
+func TestFlagParseError(t *testing.T) {
+	loader := &conf.MultiLoader{
+		Args:      []string{"-many", "-opty"},
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+	}
+	config, origin, err := loader.Load()
+
+	requireError(t, err, "Expected error loading conf with bad flags")
+	assertContains(t, err.Error(), "conf.Load: error parsing flags: ", "Expected flag parse error message")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
+func TestJSONFileReadError(t *testing.T) {
+	loader := &conf.MultiLoader{
+		JSONKey:   "conf",
+		Args:      []string{"-conf", "file-does-not-exist"},
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+	}
+	config, origin, err := loader.Load()
+
+	requireError(t, err, "Expected error loading conf with non-existing JSON file")
+	assertContains(t, err.Error(), "conf.Load: error reading JSON file: ", "Expected JSON file read error message")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
+func TestJSONFileParseError(t *testing.T) {
+	content := "bad-json"
+	jsonFile := createFile(t, content)
+	defer os.Remove(jsonFile)
+
+	loader := &conf.MultiLoader{
+		JSONKey:   "conf",
+		Args:      []string{"-conf", jsonFile},
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+	}
+	config, origin, err := loader.Load()
+
+	requireError(t, err, "Expected error loading conf with malformed JSON file")
+	assertContains(t, err.Error(), "conf.Load: error parsing JSON file: ", "Expected JSON file parse error message")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
+func TestMissingMandatoryConfigError(t *testing.T) {
+	loader := &conf.MultiLoader{
+		Mandatory: []string{"man", "man2", "man3"},
+		Optional:  []string{"opt", "opt2", "opt3"},
+		Defaults:  map[string]string{"man": mand, "opt": optd},
+	}
+	config, origin, err := loader.Load()
+
+	requireError(t, err, "Expected error loading conf with missing mandatory configurations")
+	assertEqual(t, err.Error(), "conf.Load: missing mandatory configurations: man2, man3", "Expected missing mandatory configurations")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
 func requireNoError(t *testing.T, err error, msg string) {
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
@@ -195,13 +263,34 @@ func requireNoError(t *testing.T, err error, msg string) {
 	}
 }
 
-func assertEqual(t *testing.T, actual, expected, msg string) {
-	if actual != expected {
+func requireError(t *testing.T, err error, msg string) {
+	if err == nil {
+		_, file, line, _ := runtime.Caller(1)
+		fileBase := path.Base(file)
+
+		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
+		t.FailNow()
+	}
+}
+
+func assertEqual(t *testing.T, actual, expected, msg interface{}) {
+	if !reflect.DeepEqual(actual, expected) {
 		_, file, line, _ := runtime.Caller(1)
 		fileBase := path.Base(file)
 
 		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
 		fmt.Printf("\t%v:%v: %#v != %#v\n\n", fileBase, line, actual, expected)
+		t.Fail()
+	}
+}
+
+func assertContains(t *testing.T, total, part, msg string) {
+	if !strings.Contains(total, part) {
+		_, file, line, _ := runtime.Caller(1)
+		fileBase := path.Base(file)
+
+		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
+		fmt.Printf("\t%v:%v: %#v doesn't contain %#v\n\n", fileBase, line, total, part)
 		t.Fail()
 	}
 }
