@@ -43,6 +43,8 @@ func TestLoadFromJSON(t *testing.T) {
 
 	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, man, opt)
 	jsonFile := tempFile(t, content)
+	defer os.Remove(jsonFile)
+
 	loader := &conf.MultiLoader{
 		JSONKey:   "conf",
 		Args:      []string{"-conf", jsonFile},
@@ -104,6 +106,118 @@ func TestLoadFromDefaults(t *testing.T) {
 	assertEqual(t, config["opt"], opt, "Expected optional defaults config to be extracted")
 	assertEqual(t, origin["man"], defaults, "Expected mandatory config to be provided by defaults")
 	assertEqual(t, origin["opt"], defaults, "Expected optional config to be provided by defaults")
+}
+
+func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
+	const manf = "man:flags"
+	const optf = "opt:flags"
+	const manj = "man:json"
+	const optj = "opt:json"
+	const mane = "man:env"
+	const opte = "opt:env"
+	const mand = "man:defaults"
+	const optd = "opt:defaults"
+
+	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, manj, optj)
+	jsonFile := tempFile(t, content)
+	defer os.Remove(jsonFile)
+
+	err := os.Setenv("man", mane)
+	requireNoError(t, err, "Expected no error setting environment")
+	defer os.Unsetenv("man")
+	err = os.Setenv("opt", opte)
+	requireNoError(t, err, "Expected no error setting environment")
+	defer os.Unsetenv("opt")
+
+	loader := &conf.MultiLoader{
+		JSONKey:   "conf",
+		Args:      []string{"-conf", jsonFile, "-man", manf, "-opt", optf},
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+		Defaults: map[string]string{
+			"man": mand,
+			"opt": optd,
+		},
+	}
+	config, origin, err := loader.Load()
+
+	requireNoError(t, err, "Expected no error loading conf")
+
+	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
+	assertEqual(t, config["opt"], optf, "Expected optional flags config to be extracted")
+	assertEqual(t, origin["man"], flags, "Expected mandatory config to be provided by flags")
+	assertEqual(t, origin["opt"], flags, "Expected optional config to be provided by flags")
+}
+
+func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
+	const manj = "man:json"
+	const optj = "opt:json"
+	const mane = "man:env"
+	const opte = "opt:env"
+	const mand = "man:defaults"
+	const optd = "opt:defaults"
+
+	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s"	}`, manj, optj)
+	jsonFile := tempFile(t, content)
+	defer os.Remove(jsonFile)
+
+	err := os.Setenv("man", mane)
+	requireNoError(t, err, "Expected no error setting environment")
+	defer os.Unsetenv("man")
+	err = os.Setenv("opt", opte)
+	requireNoError(t, err, "Expected no error setting environment")
+	defer os.Unsetenv("opt")
+
+	loader := &conf.MultiLoader{
+		JSONKey:   "conf",
+		Args:      []string{"-conf", jsonFile},
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+		Defaults: map[string]string{
+			"man": mand,
+			"opt": optd,
+		},
+	}
+	config, origin, err := loader.Load()
+
+	requireNoError(t, err, "Expected no error loading conf")
+
+	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
+	assertEqual(t, config["opt"], optj, "Expected optional JSON config to be extracted")
+	assertEqual(t, origin["man"], json, "Expected mandatory config to be provided by json")
+	assertEqual(t, origin["opt"], json, "Expected optional config to be provided by json")
+}
+
+func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
+	const mane = "man:env"
+	const opte = "opt:env"
+	const mand = "man:defaults"
+	const optd = "opt:defaults"
+
+	err := os.Setenv("man", mane)
+	requireNoError(t, err, "Expected no error setting environment")
+	defer os.Unsetenv("man")
+	err = os.Setenv("opt", opte)
+	requireNoError(t, err, "Expected no error setting environment")
+	defer os.Unsetenv("opt")
+
+	loader := &conf.MultiLoader{
+		JSONKey:   "conf",
+		Mandatory: []string{"man"},
+		Optional:  []string{"opt"},
+		Defaults: map[string]string{
+			"man": mand,
+			"opt": optd,
+		},
+	}
+	config, origin, err := loader.Load()
+
+	requireNoError(t, err, "Expected no error loading conf")
+
+	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
+	assertEqual(t, config["opt"], opte, "Expected optional environment config to be extracted")
+	assertEqual(t, origin["man"], env, "Expected mandatory config to be provided by environment")
+	assertEqual(t, origin["opt"], env, "Expected optional config to be provided by environment")
 }
 
 func requireNoError(t *testing.T, err error, msg string) {
