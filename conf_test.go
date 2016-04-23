@@ -268,6 +268,20 @@ func TestFlagKeyCollisionsError(t *testing.T) {
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
 }
 
+func TestEmptyKeyError(t *testing.T) {
+	loader := &conf.MultiLoader{
+		Mandatory: []string{"man", ""},
+		Optional:  []string{"opt", ""},
+	}
+	config, origin, err := loader.Load()
+
+	requireError(t, err, "Expected error loading conf with empty configurations")
+	assertEqual(t, err.Error(), "conf.Load: empty keys exist: mandatory, optional", "Expected empty configuration error")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
 func requireNoError(t *testing.T, err error, msg string) {
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)

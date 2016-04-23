@@ -22,6 +22,10 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	config = make(map[string]string)
 	origin = make(map[string]string)
 
+	if err = l.verifyPresence(); err != nil {
+		return nil, nil, fmt.Errorf("conf.Load: %s", err)
+	}
+
 	if err = l.verifyUniqueness(); err != nil {
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
@@ -47,6 +51,33 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	}
 
 	return config, origin, nil
+}
+
+func (l MultiLoader) verifyPresence() error {
+	var missing []string
+
+	if isPresentInside(l.Mandatory, "") {
+		missing = append(missing, "mandatory")
+	}
+	if isPresentInside(l.Optional, "") {
+		missing = append(missing, "optional")
+	}
+
+	if len(missing) > 0 {
+		return fmt.Errorf("empty keys exist: %s", strings.Join(missing, ", "))
+	}
+
+	return nil
+}
+
+func isPresentInside(list []string, key string) bool {
+	for _, item := range list {
+		if item == key {
+			return true
+		}
+	}
+
+	return false
 }
 
 func partitionByUniqueness(list []string) (uniq, dulp []string) {
