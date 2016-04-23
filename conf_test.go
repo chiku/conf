@@ -252,6 +252,22 @@ func TestMissingMandatoryConfigError(t *testing.T) {
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
 }
 
+func TestFlagKeyCollisionsError(t *testing.T) {
+	loader := &conf.MultiLoader{
+		JSONKey:   "shr",
+		Mandatory: []string{"man", "man", "man1", "man1", "shr1", "shr2", "shr"},
+		Optional:  []string{"opt", "opt", "opt1", "opt1", "shr1", "shr2", "shr"},
+		Defaults:  map[string]string{"man": mand, "opt": optd},
+	}
+	config, origin, err := loader.Load()
+
+	requireError(t, err, "Expected error loading conf with overlapping mandatory and optional configurations")
+	assertEqual(t, err.Error(), "conf.Load: configuration keys are duplicated: mandatory(man, man1), optional(opt, opt1), mandatory+optional(shr, shr1, shr2), mandatory+jsonkey(shr), optional+jsonkey(shr)", "Expected overlapping configurations")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
 func requireNoError(t *testing.T, err error, msg string) {
 	if err != nil {
 		_, file, line, _ := runtime.Caller(1)
