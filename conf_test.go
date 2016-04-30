@@ -1,23 +1,16 @@
-package conf_test
+package conf
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path"
-	"reflect"
-	"runtime"
-	"strings"
 	"testing"
-
-	"github.com/chiku/conf"
 )
 
 const (
-	json     = "JSON"
-	flags    = "Flags"
-	env      = "Environment"
-	defaults = "Defaults"
+	jsonOrig     = "JSON"
+	flagsOrig    = "Flags"
+	envOrig      = "Environment"
+	defaultsOrig = "Defaults"
 
 	manf = "man:flags"
 	optf = "opt:flags"
@@ -30,7 +23,7 @@ const (
 )
 
 func TestLoadFromFlags(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		Args:      []string{"-man", manf, "-opt", optf},
 		Mandatory: []string{"man"},
 		Optional:  []string{"opt"},
@@ -41,8 +34,8 @@ func TestLoadFromFlags(t *testing.T) {
 
 	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
 	assertEqual(t, config["opt"], optf, "Expected optional flags config to be extracted")
-	assertEqual(t, origin["man"], flags, "Expected mandatory config to be provided by flags")
-	assertEqual(t, origin["opt"], flags, "Expected optional config to be provided by flags")
+	assertEqual(t, origin["man"], flagsOrig, "Expected mandatory config to be provided by flags")
+	assertEqual(t, origin["opt"], flagsOrig, "Expected optional config to be provided by flags")
 }
 
 func TestLoadFromJSON(t *testing.T) {
@@ -50,7 +43,7 @@ func TestLoadFromJSON(t *testing.T) {
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "conf",
 		Args:      []string{"-conf", jsonFile},
 		Mandatory: []string{"man"},
@@ -62,8 +55,8 @@ func TestLoadFromJSON(t *testing.T) {
 
 	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
 	assertEqual(t, config["opt"], optj, "Expected optional JSON config to be extracted")
-	assertEqual(t, origin["man"], json, "Expected mandatory config to be provided by JSON")
-	assertEqual(t, origin["opt"], json, "Expected optional config to be provided by JSON")
+	assertEqual(t, origin["man"], jsonOrig, "Expected mandatory config to be provided by JSON")
+	assertEqual(t, origin["opt"], jsonOrig, "Expected optional config to be provided by JSON")
 }
 
 func TestLoadFromEnvironment(t *testing.T) {
@@ -74,7 +67,7 @@ func TestLoadFromEnvironment(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		Mandatory: []string{"man"},
 		Optional:  []string{"opt"},
 	}
@@ -84,12 +77,12 @@ func TestLoadFromEnvironment(t *testing.T) {
 
 	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
 	assertEqual(t, config["opt"], opte, "Expected optional environment config to be extracted")
-	assertEqual(t, origin["man"], env, "Expected mandatory config to be provided by environment")
-	assertEqual(t, origin["opt"], env, "Expected optional config to be provided by environment")
+	assertEqual(t, origin["man"], envOrig, "Expected mandatory config to be provided by environment")
+	assertEqual(t, origin["opt"], envOrig, "Expected optional config to be provided by environment")
 }
 
 func TestLoadFromDefaults(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		Mandatory: []string{"man"},
 		Optional:  []string{"opt"},
 		Defaults:  map[string]string{"man": mand, "opt": optd},
@@ -100,8 +93,8 @@ func TestLoadFromDefaults(t *testing.T) {
 
 	assertEqual(t, config["man"], mand, "Expected mandatory defaults config to be extracted")
 	assertEqual(t, config["opt"], optd, "Expected optional defaults config to be extracted")
-	assertEqual(t, origin["man"], defaults, "Expected mandatory config to be provided by defaults")
-	assertEqual(t, origin["opt"], defaults, "Expected optional config to be provided by defaults")
+	assertEqual(t, origin["man"], defaultsOrig, "Expected mandatory config to be provided by defaults")
+	assertEqual(t, origin["opt"], defaultsOrig, "Expected optional config to be provided by defaults")
 }
 
 func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
@@ -116,7 +109,7 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "conf",
 		Args:      []string{"-conf", jsonFile, "-man", manf, "-opt", optf},
 		Mandatory: []string{"man"},
@@ -129,8 +122,8 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 
 	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
 	assertEqual(t, config["opt"], optf, "Expected optional flags config to be extracted")
-	assertEqual(t, origin["man"], flags, "Expected mandatory config to be provided by flags")
-	assertEqual(t, origin["opt"], flags, "Expected optional config to be provided by flags")
+	assertEqual(t, origin["man"], flagsOrig, "Expected mandatory config to be provided by flags")
+	assertEqual(t, origin["opt"], flagsOrig, "Expected optional config to be provided by flags")
 }
 
 func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
@@ -145,7 +138,7 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "conf",
 		Args:      []string{"-conf", jsonFile},
 		Mandatory: []string{"man"},
@@ -158,8 +151,8 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 
 	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
 	assertEqual(t, config["opt"], optj, "Expected optional JSON config to be extracted")
-	assertEqual(t, origin["man"], json, "Expected mandatory config to be provided by json")
-	assertEqual(t, origin["opt"], json, "Expected optional config to be provided by json")
+	assertEqual(t, origin["man"], jsonOrig, "Expected mandatory config to be provided by json")
+	assertEqual(t, origin["opt"], jsonOrig, "Expected optional config to be provided by json")
 }
 
 func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
@@ -170,7 +163,7 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "conf",
 		Mandatory: []string{"man"},
 		Optional:  []string{"opt"},
@@ -182,12 +175,12 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 
 	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
 	assertEqual(t, config["opt"], opte, "Expected optional environment config to be extracted")
-	assertEqual(t, origin["man"], env, "Expected mandatory config to be provided by environment")
-	assertEqual(t, origin["opt"], env, "Expected optional config to be provided by environment")
+	assertEqual(t, origin["man"], envOrig, "Expected mandatory config to be provided by environment")
+	assertEqual(t, origin["opt"], envOrig, "Expected optional config to be provided by environment")
 }
 
 func TestFlagParseError(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		Args:      []string{"-many", "-opty"},
 		Mandatory: []string{"man"},
 		Optional:  []string{"opt"},
@@ -202,7 +195,7 @@ func TestFlagParseError(t *testing.T) {
 }
 
 func TestJSONFileReadError(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "conf",
 		Args:      []string{"-conf", "file-does-not-exist"},
 		Mandatory: []string{"man"},
@@ -222,7 +215,7 @@ func TestJSONFileParseError(t *testing.T) {
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "conf",
 		Args:      []string{"-conf", jsonFile},
 		Mandatory: []string{"man"},
@@ -238,7 +231,7 @@ func TestJSONFileParseError(t *testing.T) {
 }
 
 func TestMissingMandatoryConfigError(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		Mandatory: []string{"man", "man2", "man3"},
 		Optional:  []string{"opt", "opt2", "opt3"},
 		Defaults:  map[string]string{"man": mand, "opt": optd},
@@ -253,7 +246,7 @@ func TestMissingMandatoryConfigError(t *testing.T) {
 }
 
 func TestFlagKeyCollisionsError(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		JSONKey:   "shr",
 		Mandatory: []string{"man", "man", "man1", "man1", "shr1", "shr2", "shr"},
 		Optional:  []string{"opt", "opt", "opt1", "opt1", "shr1", "shr2", "shr"},
@@ -269,7 +262,7 @@ func TestFlagKeyCollisionsError(t *testing.T) {
 }
 
 func TestEmptyKeyError(t *testing.T) {
-	loader := &conf.MultiLoader{
+	loader := &MultiLoader{
 		Mandatory: []string{"man", ""},
 		Optional:  []string{"opt", ""},
 	}
@@ -280,58 +273,4 @@ func TestEmptyKeyError(t *testing.T) {
 
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
-}
-
-func requireNoError(t *testing.T, err error, msg string) {
-	if err != nil {
-		_, file, line, _ := runtime.Caller(1)
-		fileBase := path.Base(file)
-
-		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
-		fmt.Printf("\t%v:%v: %s\n\n", fileBase, line, err.Error())
-		t.FailNow()
-	}
-}
-
-func requireError(t *testing.T, err error, msg string) {
-	if err == nil {
-		_, file, line, _ := runtime.Caller(1)
-		fileBase := path.Base(file)
-
-		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
-		t.FailNow()
-	}
-}
-
-func assertEqual(t *testing.T, actual, expected, msg interface{}) {
-	if !reflect.DeepEqual(actual, expected) {
-		_, file, line, _ := runtime.Caller(1)
-		fileBase := path.Base(file)
-
-		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
-		fmt.Printf("\t%v:%v: %#v != %#v\n\n", fileBase, line, actual, expected)
-		t.Fail()
-	}
-}
-
-func assertContains(t *testing.T, total, part, msg string) {
-	if !strings.Contains(total, part) {
-		_, file, line, _ := runtime.Caller(1)
-		fileBase := path.Base(file)
-
-		fmt.Printf("\t%v:%v: %s\n", fileBase, line, msg)
-		fmt.Printf("\t%v:%v: %#v doesn't contain %#v\n\n", fileBase, line, total, part)
-		t.Fail()
-	}
-}
-
-func createFile(t *testing.T, content string) string {
-	tmpfile, err := ioutil.TempFile("", "example")
-	requireNoError(t, err, "Expected no error creating temporary file")
-	_, err = tmpfile.Write([]byte(content))
-	requireNoError(t, err, "Expected no error writing to temporary file")
-	err = tmpfile.Close()
-	requireNoError(t, err, "Expected no error closing temporary file")
-
-	return tmpfile.Name()
 }

@@ -1,12 +1,9 @@
 package conf
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"sort"
 	"strings"
 )
 
@@ -70,38 +67,6 @@ func (l MultiLoader) verifyPresence() error {
 	return nil
 }
 
-func isPresentInside(list []string, key string) bool {
-	for _, item := range list {
-		if item == key {
-			return true
-		}
-	}
-
-	return false
-}
-
-func partitionByUniqueness(list []string) (uniq, dulp []string) {
-	lookup := make(map[string]bool)
-	alreadyDuplicated := make(map[string]bool)
-
-	for _, item := range list {
-		if !lookup[item] {
-			uniq = append(uniq, item)
-		}
-
-		if lookup[item] && !alreadyDuplicated[item] {
-			dulp = append(dulp, item)
-			alreadyDuplicated[item] = true
-		}
-
-		lookup[item] = true
-	}
-
-	sort.Strings(uniq)
-	sort.Strings(dulp)
-	return uniq, dulp
-}
-
 func uniqueness(items, existingDuplMsgs []string, key string) (uniq, duplMsgs []string) {
 	uniq, dupl := partitionByUniqueness(items)
 
@@ -148,26 +113,6 @@ func (l MultiLoader) parseFlags() (flagVals map[string]*string, err error) {
 	}
 
 	return flagVals, nil
-}
-
-func parseJSON(file *string) (map[string]string, error) {
-	var config map[string]string
-
-	if file == nil || *file == "" {
-		return nil, nil
-	}
-
-	content, err := ioutil.ReadFile(*file)
-	if err != nil {
-		return nil, fmt.Errorf("error reading JSON file: %s", err)
-	}
-
-	err = json.Unmarshal(content, &config)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing JSON file: %s", err)
-	}
-
-	return config, nil
 }
 
 type mappingFunc func(key string) (value string)
