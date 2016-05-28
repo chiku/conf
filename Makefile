@@ -12,19 +12,22 @@ SHELL := bash
 .DELETE_ON_ERROR:
 .SUFFIXES:
 
+ifndef GOPATH
+$(error GOPATH not set)
+endif
+
 MKDIR = mkdir -p
 RM = rm -rvf
 GO = go
-GLIDE = glide
+GLIDE = $(GOPATH)/bin/glide
 
 sources := $(wildcard *.go)
+coverage = coverage
+coverage_out = $(coverage)/coverage.out
+coverage_html = $(coverage)/coverage.html
 
 .PHONY: all
-all: prereq fmt vet test
-
-.PHONY: prereq
-prereqs:
-	${GLIDE} install
+all: fmt vet test
 
 .PHONY: fmt
 fmt:
@@ -35,18 +38,22 @@ vet:
 	${GO} vet
 
 .PHONY: test
-test: coverage/coverage.html
+test: $(coverage_html)
 
-coverage:
-	${MKDIR} coverage
+.PHONY: fuzz
+fuzz:
+	${GO} test -v ./fuzz
+
+$(coverage):
+	${MKDIR} $(coverage)
 
 .PHONY: clean
 clean:
-	${RM} coverage
+	${RM} $(coverage)
 
-coverage/coverage.out: $(sources) coverage
-	${GO} test -coverprofile=coverage/coverage.out
+$(coverage_out): $(sources) $(coverage)
+	${GO} test -coverprofile=$(coverage_out)
 
-coverage/coverage.html: coverage/coverage.out
-	${GO} tool cover -func=coverage/coverage.out
-	${GO} tool cover -html=coverage/coverage.out -o coverage/coverage.html
+$(coverage_html): $(coverage_out)
+	${GO} tool cover -func=$(coverage_out)
+	${GO} tool cover -html=$(coverage_out) -o $(coverage_html)
