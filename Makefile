@@ -42,7 +42,7 @@ test: $(coverage_html)
 
 .PHONY: fuzz
 fuzz:
-	${GO} test -v ./fuzz
+	${GO} test -v ./fuzz -timeout 1h
 
 $(coverage):
 	${MKDIR} $(coverage)
