@@ -26,7 +26,7 @@ install_golang_deps() {
 
 build() {
   make
-  goveralls -v -service drone.io $COVERALLS_TOKEN
+  goveralls -v -service drone.io -repotoken $COVERALLS_TOKEN
 }
 
 run() {
