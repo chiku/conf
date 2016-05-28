@@ -16,6 +16,11 @@ type MultiLoader struct {
 }
 
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
+	l.Args = os.Args[1:]
+	return l.load()
+}
+
+func (l MultiLoader) load() (config map[string]string, origin map[string]string, err error) {
 	config = make(map[string]string)
 	origin = make(map[string]string)
 
