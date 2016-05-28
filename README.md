@@ -22,7 +22,7 @@ Running tests
 make all
 
 # fuzzy tests
-go test ./fuzz
+make fuzz
 ```
 
 Contributing

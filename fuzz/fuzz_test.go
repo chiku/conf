@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	max        = 100000000
+	max        = 1500000
 	notifyStep = 10000
 )
 

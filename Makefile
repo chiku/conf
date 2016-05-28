@@ -22,6 +22,7 @@ GO = go
 GLIDE = $(GOPATH)/bin/glide
 
 sources := $(wildcard *.go)
+gofuzz = github.com/google/gofuzz
 coverage = coverage
 coverage_out = $(coverage)/coverage.out
 coverage_html = $(coverage)/coverage.html
@@ -40,8 +41,11 @@ vet:
 .PHONY: test
 test: $(coverage_html)
 
+$(GOPATH)/src/$(gofuzz):
+	go get $(gofuzz)
+
 .PHONY: fuzz
-fuzz:
+fuzz: $(GOPATH)/src/$(gofuzz)
 	${GO} test -v ./fuzz -timeout 1h
 
 $(coverage):
