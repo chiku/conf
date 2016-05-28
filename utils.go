@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"sort"
 )
 
 func isPresentInside(list []string, key string) bool {
@@ -18,12 +17,11 @@ func isPresentInside(list []string, key string) bool {
 }
 
 func partitionByUniqueness(list []string) (uniq, dupl []string) {
-	sort.Strings(list)
-
 	presentInUniq := make(map[string]bool)
 	presentInDupl := make(map[string]bool)
 
 	for _, item := range list {
+
 		isPresentInUniq := presentInUniq[item]
 		isPresentInDupl := presentInDupl[item]
 

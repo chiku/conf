@@ -18,12 +18,12 @@ func TestIsPresentInsideForEmptySlice(t *testing.T) {
 }
 
 func TestPartitionByUniqueness(t *testing.T) {
-	list := []string{"uniq2", "dupl2", "dupl1", "dupl2", "dupl2", "dupl2", "dupl1", "uniq1"}
+	list := []string{"uniq1", "dupl2", "dupl1", "dupl2", "dupl2", "dupl2", "dupl1", "uniq2"}
 
 	uniq, dupl := partitionByUniqueness(list)
 
-	assertEqual(t, uniq, []string{"uniq1", "uniq2"}, "Expected unique items to be sorted")
-	assertEqual(t, dupl, []string{"dupl1", "dupl2"}, "Expected duplicate items to be sorted")
+	assertEqual(t, uniq, []string{"uniq1", "uniq2"}, "Expected unique to maintain original order")
+	assertEqual(t, dupl, []string{"dupl2", "dupl1"}, "Expected duplicate items to maintain original order")
 }
 
 func TestPartitionByUniquenessForEmptySlice(t *testing.T) {

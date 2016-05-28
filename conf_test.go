@@ -255,7 +255,7 @@ func TestFlagKeyCollisionsError(t *testing.T) {
 	config, origin, err := loader.Load()
 
 	requireError(t, err, "Expected error loading conf with overlapping mandatory and optional configurations")
-	assertEqual(t, err.Error(), "conf.Load: configuration keys are duplicated: mandatory(man, man1), optional(opt, opt1), mandatory+optional(shr, shr1, shr2), mandatory+jsonkey(shr), optional+jsonkey(shr)", "Expected overlapping configurations")
+	assertEqual(t, err.Error(), "conf.Load: configuration keys are duplicated: mandatory(man, man1), optional(opt, opt1), mandatory+optional(shr1, shr2, shr), mandatory+jsonkey(shr), optional+jsonkey(shr)", "Expected overlapping configurations")
 
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
@@ -271,6 +271,19 @@ func TestEmptyKeyError(t *testing.T) {
 	requireError(t, err, "Expected error loading conf with empty configurations")
 	assertEqual(t, err.Error(), "conf.Load: empty keys exist: mandatory, optional", "Expected empty configuration error")
 
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
+func TestFuzzError1(t *testing.T) {
+	loader := &MultiLoader{
+		JSONKey:   "Ĺ",
+		Mandatory: []string{"5Ò劯YņëHƋ訖玲薯ŀ", "CƱ屼=ðȡ", "E聻阑l", "FŧÒ簠}ZĀi>2鯢鎗觡ǲ", "r刍ĵsJ", "Ĺ", "効谄縫BɈ璻)隽Ld", "固[飳Ɛ茞燂Yi衮ɼO榲\u00adȾ", "鮀ȯIÏ忞"},
+		Optional:  []string{"Rl:O", "^4uſǖʈƩʟǑȶªIƙǨ鋜", "e郊Ɔ鏬挋眖筎:ûǽǬ鴜Ȃ", "i莝á沷俜ƦǱ缘Ín痐U"},
+	}
+
+	config, origin, err := loader.Load()
+	requireError(t, err, "Expected error loading conf with empty configurations")
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
 }
