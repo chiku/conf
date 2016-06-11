@@ -24,8 +24,9 @@ const (
 
 func TestLoadFromFlags(t *testing.T) {
 	loader := &MultiLoader{
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
+		Mandatory:   []string{"man"},
+		Optional:    []string{"opt"},
+		Description: map[string]string{"man": "mandatory item"},
 	}
 	config, origin, err := loader.load([]string{"-man", manf, "-opt", optf})
 
@@ -249,6 +250,24 @@ func TestFlagKeyCollisionsError(t *testing.T) {
 
 	requireError(t, err, "Expected error loading conf with overlapping mandatory and optional configurations")
 	assertEqual(t, err.Error(), "conf.Load: configuration keys are duplicated: mandatory(man, man1), optional(opt, opt1), mandatory+optional(shr1, shr2, shr), mandatory+jsonkey(shr), optional+jsonkey(shr)", "Expected overlapping configurations")
+
+	assertEqual(t, len(config), 0, "Expected configuration to not exist")
+	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
+func TestUnknownDescriptionKeyError(t *testing.T) {
+	loader := &MultiLoader{
+		Mandatory:   []string{"man"},
+		Optional:    []string{"opt"},
+		Description: map[string]string{"man1": "man1 description", "opt": "opt description", "opt1": "opt1 description"},
+		Defaults:    map[string]string{"man": mand, "opt": optd},
+	}
+	config, origin, err := loader.load(nil)
+
+	requireError(t, err, "Expected error loading conf with unknown description")
+	assertContains(t, err.Error(), "conf.Load: description keys are unknown: ", "Expected unknown descriptions")
+	assertContains(t, err.Error(), "man1", "Expected unknown descriptions")
+	assertContains(t, err.Error(), "opt1", "Expected unknown descriptions")
 
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")

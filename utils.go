@@ -16,6 +16,18 @@ func isPresentInside(list []string, key string) bool {
 	return false
 }
 
+func extraItems(differentiator []string, container []string) []string {
+	var unknowns []string
+
+	for _, item := range differentiator {
+		if !isPresentInside(container, item) {
+			unknowns = append(unknowns, item)
+		}
+	}
+
+	return unknowns
+}
+
 func partitionByUniqueness(list []string) (uniq, dupl []string) {
 	presentInUniq := make(map[string]bool)
 	presentInDupl := make(map[string]bool)

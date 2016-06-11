@@ -17,6 +17,13 @@ func TestIsPresentInsideForEmptySlice(t *testing.T) {
 	assertEqual(t, isPresentInside([]string{}, ""), false, "Expected empty item to not exist inside empty slice")
 }
 
+func TestExtraItems(t *testing.T) {
+	assertEqual(t, extraItems([]string{"a1", "a2", "a3"}, []string{"a1", "a3", "a4"}), []string{"a2"}, "Expected extra keys in map to be first-second")
+	assertEqual(t, extraItems([]string{"a"}, []string{}), []string{"a"}, "Expected extra keys in map to be first when second empty")
+	assertEqual(t, len(extraItems([]string{"a", "b"}, []string{"b", "a"})), 0, "Expected no extra keys when slice contain same items")
+	assertEqual(t, len(extraItems([]string{}, []string{"a"})), 0, "Expected no extra keys in map when second slice empty")
+}
+
 func TestPartitionByUniqueness(t *testing.T) {
 	list := []string{"uniq1", "dupl2", "dupl1", "dupl2", "dupl2", "dupl2", "dupl1", "uniq2"}
 

@@ -28,7 +28,7 @@ coverage_out = $(coverage)/coverage.out
 coverage_html = $(coverage)/coverage.html
 
 .PHONY: all
-all: fmt vet test
+all: fmt vet test out/example
 
 .PHONY: fmt
 fmt:
@@ -47,6 +47,9 @@ $(GOPATH)/src/$(gofuzz):
 .PHONY: fuzz
 fuzz: $(GOPATH)/src/$(gofuzz)
 	${GO} test -v ./fuzz -timeout 1h
+
+out/example:
+	${GO} build -o out/example ./examples
 
 $(coverage):
 	${MKDIR} $(coverage)

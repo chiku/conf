@@ -8,10 +8,11 @@ import (
 )
 
 type MultiLoader struct {
-	JSONKey   string
-	Mandatory []string
-	Optional  []string
-	Defaults  map[string]string
+	JSONKey     string
+	Mandatory   []string
+	Optional    []string
+	Description map[string]string
+	Defaults    map[string]string
 }
 
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
@@ -28,6 +29,10 @@ func (l MultiLoader) load(args []string) (config map[string]string, origin map[s
 	}
 
 	if err = l.verifyUniqueness(); err != nil {
+		return nil, nil, fmt.Errorf("conf.Load: %s", err)
+	}
+
+	if err = l.verifyDescriptions(); err != nil {
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
 
@@ -97,15 +102,44 @@ func (l MultiLoader) verifyUniqueness() error {
 	return nil
 }
 
+func (l MultiLoader) verifyDescriptions() error {
+	knowns := make([]string, 0, len(l.Mandatory)+len(l.Optional))
+	for _, item := range l.Mandatory {
+		knowns = append(knowns, item)
+	}
+	for _, item := range l.Optional {
+		knowns = append(knowns, item)
+	}
+
+	descs := make([]string, 0, len(l.Description))
+	for item := range l.Description {
+		descs = append(descs, item)
+	}
+
+	extras := extraItems(descs, knowns)
+	if len(extras) == 0 {
+		return nil
+	}
+
+	return fmt.Errorf("description keys are unknown: %s", strings.Join(extras, ", "))
+}
+
+func (l MultiLoader) description(flags *flag.FlagSet, item string) *string {
+	if desc, ok := l.Description[item]; ok {
+		return flags.String(item, "", desc)
+	}
+	return flags.String(item, "", item)
+}
+
 func (l MultiLoader) parseFlags(args []string) (flagVals map[string]*string, err error) {
 	flagVals = make(map[string]*string)
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
 
 	for _, item := range l.Mandatory {
-		flagVals[item] = flags.String(item, "", item)
+		flagVals[item] = l.description(flags, item)
 	}
 	for _, item := range l.Optional {
-		flagVals[item] = flags.String(item, "", item)
+		flagVals[item] = l.description(flags, item)
 	}
 	if l.JSONKey != "" {
 		flagVals[l.JSONKey] = flags.String(l.JSONKey, "", "JSON configuration file")

@@ -8,10 +8,11 @@ import (
 
 func main() {
 	loader := conf.MultiLoader{
-		JSONKey:   "shr",
-		Mandatory: []string{"foo", "bar"},
-		Optional:  []string{"baz", "qux"},
-		Defaults:  map[string]string{"foo": "default foo"},
+		JSONKey:     "shr",
+		Mandatory:   []string{"foo", "bar"},
+		Optional:    []string{"baz", "qux"},
+		Defaults:    map[string]string{"foo": "default foo"},
+		Description: map[string]string{"foo": "a description for foo", "baz": "a description for baz"},
 	}
 
 	config, origin, err := loader.Load()
