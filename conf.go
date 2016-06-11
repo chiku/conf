@@ -12,15 +12,14 @@ type MultiLoader struct {
 	Mandatory []string
 	Optional  []string
 	Defaults  map[string]string
-	Args      []string
 }
 
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
-	l.Args = os.Args[1:]
-	return l.load()
+	args := os.Args[1:]
+	return l.load(args)
 }
 
-func (l MultiLoader) load() (config map[string]string, origin map[string]string, err error) {
+func (l MultiLoader) load(args []string) (config map[string]string, origin map[string]string, err error) {
 	config = make(map[string]string)
 	origin = make(map[string]string)
 
@@ -32,7 +31,7 @@ func (l MultiLoader) load() (config map[string]string, origin map[string]string,
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
 
-	flagVals, err := l.parseFlags()
+	flagVals, err := l.parseFlags(args)
 	if err != nil {
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
@@ -98,7 +97,7 @@ func (l MultiLoader) verifyUniqueness() error {
 	return nil
 }
 
-func (l MultiLoader) parseFlags() (flagVals map[string]*string, err error) {
+func (l MultiLoader) parseFlags(args []string) (flagVals map[string]*string, err error) {
 	flagVals = make(map[string]*string)
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
 
@@ -112,7 +111,7 @@ func (l MultiLoader) parseFlags() (flagVals map[string]*string, err error) {
 		flagVals[l.JSONKey] = flags.String(l.JSONKey, "", "JSON configuration file")
 	}
 
-	err = flags.Parse(l.Args)
+	err = flags.Parse(args)
 	if err != nil {
 		return nil, fmt.Errorf("error parsing flags: %s", err)
 	}
