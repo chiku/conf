@@ -48,7 +48,7 @@ $(GOPATH)/src/$(gofuzz):
 fuzz: $(GOPATH)/src/$(gofuzz)
 	${GO} test -v ./fuzz -timeout 1h
 
-out/example:
+out/example: $(sources) examples/example.go
 	${GO} build -o out/example ./examples
 
 $(coverage):
