@@ -1,6 +1,6 @@
 #/bin/bash
 
-set -e
+set -euo pipefail
 
 setup_environment() {
   export GOROOT=$HOME/go
