@@ -2,6 +2,7 @@ package conf
 
 import (
 	"os"
+	"sort"
 	"testing"
 )
 
@@ -22,6 +23,17 @@ func TestExtraItems(t *testing.T) {
 	assertEqual(t, extraItems([]string{"a"}, []string{}), []string{"a"}, "Expected extra keys in map to be first when second empty")
 	assertEqual(t, len(extraItems([]string{"a", "b"}, []string{"b", "a"})), 0, "Expected no extra keys when slice contain same items")
 	assertEqual(t, len(extraItems([]string{}, []string{"a"})), 0, "Expected no extra keys in map when second slice empty")
+}
+
+func TestKeysInForSingleMapping(t *testing.T) {
+	keys := keysIn(map[string]string{"a1": "a1v", "a2": "a2v", "a3": "a3v"})
+	sort.Strings(keys)
+	assertEqual(t, keys, []string{"a1", "a2", "a3"}, "Expected keys in a map to be found")
+}
+
+func TestKeysInForEmptyMapping(t *testing.T) {
+	assertEqual(t, len(keysIn(map[string]string{})), 0, "Expected no keys in single multiple empty map")
+	assertEqual(t, len(keysIn(nil)), 0, "Expected no keys in nil map")
 }
 
 func TestPartitionByUniqueness(t *testing.T) {

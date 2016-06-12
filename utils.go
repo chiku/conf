@@ -16,6 +16,16 @@ func isPresentInside(list []string, key string) bool {
 	return false
 }
 
+func keysIn(mapping map[string]string) []string {
+	var keys []string
+
+	for k := range mapping {
+		keys = append(keys, k)
+	}
+
+	return keys
+}
+
 func extraItems(differentiator []string, container []string) []string {
 	var unknowns []string
 

@@ -103,10 +103,7 @@ func (l MultiLoader) verifyUniqueness() error {
 }
 
 func (l MultiLoader) verifyDescriptions() error {
-	descs := make([]string, 0, len(l.Description))
-	for item := range l.Description {
-		descs = append(descs, item)
-	}
+	descs := keysIn(l.Description)
 	knowns := append(l.Mandatory, l.Optional...)
 
 	extras := extraItems(descs, knowns)
