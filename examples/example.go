@@ -13,6 +13,7 @@ func main() {
 		Optional:    []string{"baz", "qux"},
 		Defaults:    map[string]string{"foo": "default foo"},
 		Description: map[string]string{"foo": "a description for foo", "baz": "a description for baz"},
+		Usage:       "Example application",
 	}
 
 	config, origin, err := loader.Load()

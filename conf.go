@@ -13,14 +13,22 @@ type MultiLoader struct {
 	Optional    []string
 	Description map[string]string
 	Defaults    map[string]string
+	Usage       string
 }
 
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
-	args := os.Args[1:]
-	return l.load(args)
+	program, args := os.Args[0], os.Args[1:]
+	usage := func(flags *flag.FlagSet) func() {
+		return func() {
+			fmt.Fprintf(os.Stderr, "%s: %s\n\nParameters:\n", program, l.Usage)
+			flags.PrintDefaults()
+			os.Exit(0)
+		}
+	}
+	return l.load(args, usage)
 }
 
-func (l MultiLoader) load(args []string) (config map[string]string, origin map[string]string, err error) {
+func (l MultiLoader) load(args []string, usage func(flags *flag.FlagSet) func()) (config map[string]string, origin map[string]string, err error) {
 	config = make(map[string]string)
 	origin = make(map[string]string)
 
@@ -36,7 +44,7 @@ func (l MultiLoader) load(args []string) (config map[string]string, origin map[s
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
 
-	flagVals, err := l.parseFlags(args)
+	flagVals, err := l.parseFlags(args, usage)
 	if err != nil {
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
@@ -121,9 +129,10 @@ func (l MultiLoader) description(flags *flag.FlagSet, item string) *string {
 	return flags.String(item, "", item)
 }
 
-func (l MultiLoader) parseFlags(args []string) (flagVals map[string]*string, err error) {
+func (l MultiLoader) parseFlags(args []string, usage func(*flag.FlagSet) func()) (flagVals map[string]*string, err error) {
 	flagVals = make(map[string]*string)
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
+	flags.Usage = usage(flags)
 
 	for _, item := range l.Mandatory {
 		flagVals[item] = l.description(flags, item)
