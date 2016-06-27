@@ -1,28 +1,29 @@
-package fuzz
+// +build fuzz
+
+package conf
 
 import (
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"runtime/debug"
 	"testing"
 
-	"github.com/chiku/conf"
 	"github.com/google/gofuzz"
 )
 
 const (
-	max        = 1500000
+	max        = 15000000
 	notifyStep = 10000
 )
 
 func TestConfFuzzRandom(t *testing.T) {
+	var options map[string]Option
 	var jsonKey string
-	var mandatory []string
-	var optional []string
 	var args []string
-	var defaults map[string]string
 
-	var loader conf.MultiLoader
+	var loader MultiLoader
 	var config, origin map[string]string
 	var err error
 
@@ -44,21 +45,15 @@ func TestConfFuzzRandom(t *testing.T) {
 	}()
 
 	for i := 0; i <= max; i++ {
+		f.Fuzz(&options)
 		f.Fuzz(&jsonKey)
-		f.Fuzz(&mandatory)
-		f.Fuzz(&optional)
 		f.Fuzz(&args)
-		f.Fuzz(&defaults)
 
-		loader = conf.MultiLoader{
-			JSONKey:   jsonKey,
-			Mandatory: mandatory,
-			Optional:  optional,
-			Args:      args,
-			Defaults:  defaults,
-		}
+		options := map[string]Option{}
 
-		config, origin, err = loader.Load()
+		loader = MultiLoader{Options: options, JSONKey: jsonKey}
+
+		config, origin, err = loader.load(args, sampleFlagsHandler)
 
 		if err != nil && (len(config) > 0 || len(origin) > 0) {
 			t.Errorf("error present but output not empty\n")
@@ -67,8 +62,14 @@ func TestConfFuzzRandom(t *testing.T) {
 		}
 
 		if i%notifyStep == 0 {
-			fmt.Fprintf(os.Stderr, "\r%0.1f%%", float64(i)/float64(max)*100.0)
+			fmt.Fprintf(os.Stdout, "\r%0.1f%%", float64(i)/float64(max)*100.0)
 		}
 	}
-	fmt.Fprintf(os.Stderr, "Complete...\n")
+	fmt.Fprintf(os.Stderr, "\nComplete...\n")
+}
+
+func suppressedUsage(flags *flag.FlagSet) func() {
+	return func() {
+		flags.SetOutput(ioutil.Discard)
+	}
 }

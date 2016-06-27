@@ -4,47 +4,34 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 )
 
 type MultiLoader struct {
-	JSONKey     string
-	Mandatory   []string
-	Optional    []string
-	Description map[string]string
-	Defaults    map[string]string
-	Usage       string
+	Options map[string]Option
+	JSONKey string
+	Usage   string
 }
 
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
 	program, args := os.Args[0], os.Args[1:]
-	usage := func(flags *flag.FlagSet) func() {
-		return func() {
+	flagsHandler := func(flags *flag.FlagSet) {
+		flags.Usage = func() {
 			fmt.Fprintf(os.Stderr, "%s: %s\n\nParameters:\n", program, l.Usage)
 			flags.PrintDefaults()
 			os.Exit(0)
 		}
 	}
-	return l.load(args, usage)
+
+	return l.load(args, flagsHandler)
 }
 
-func (l MultiLoader) load(args []string, usage func(flags *flag.FlagSet) func()) (config map[string]string, origin map[string]string, err error) {
+func (l MultiLoader) load(args []string, flagsHandler func(flags *flag.FlagSet)) (config map[string]string, origin map[string]string, err error) {
 	config = make(map[string]string)
 	origin = make(map[string]string)
 
-	if err = l.verifyPresence(); err != nil {
-		return nil, nil, fmt.Errorf("conf.Load: %s", err)
-	}
-
-	if err = l.verifyUniqueness(); err != nil {
-		return nil, nil, fmt.Errorf("conf.Load: %s", err)
-	}
-
-	if err = l.verifyDescriptions(); err != nil {
-		return nil, nil, fmt.Errorf("conf.Load: %s", err)
-	}
-
-	flagVals, err := l.parseFlags(args, usage)
+	flagVals, err := l.parseFlags(args, flagsHandler)
 	if err != nil {
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
 	}
@@ -58,7 +45,7 @@ func (l MultiLoader) load(args []string, usage func(flags *flag.FlagSet) func())
 	l.configure(config, origin, func(key string) string { return *flagVals[key] }, "Flags")
 	l.configure(config, origin, func(key string) string { return jsonConfig[key] }, "JSON")
 	l.configure(config, origin, func(key string) string { return os.Getenv(key) }, "Environment")
-	l.configure(config, origin, func(key string) string { return l.Defaults[key] }, "Defaults")
+	l.configure(config, origin, func(key string) string { return l.Options[key].Default }, "Defaults")
 
 	if err = l.verifyMandatoryPresent(config); err != nil {
 		return nil, nil, fmt.Errorf("conf.Load: %s", err)
@@ -67,79 +54,19 @@ func (l MultiLoader) load(args []string, usage func(flags *flag.FlagSet) func())
 	return config, origin, nil
 }
 
-func (l MultiLoader) verifyPresence() error {
-	var missing []string
-
-	if isPresentInside(l.Mandatory, "") {
-		missing = append(missing, "mandatory")
-	}
-	if isPresentInside(l.Optional, "") {
-		missing = append(missing, "optional")
-	}
-
-	if len(missing) > 0 {
-		return fmt.Errorf("empty keys exist: %s", strings.Join(missing, ", "))
-	}
-
-	return nil
-}
-
-func uniqueness(items, existingDuplMsgs []string, key string) (uniq, duplMsgs []string) {
-	uniq, dupl := partitionByUniqueness(items)
-
-	if len(dupl) > 0 {
-		return uniq, append(existingDuplMsgs, fmt.Sprintf("%s(%s)", key, strings.Join(dupl, ", ")))
-	}
-
-	return uniq, existingDuplMsgs
-}
-
-func (l MultiLoader) verifyUniqueness() error {
-	var dulpMsgs []string
-
-	uniqMandatory, dulpMsgs := uniqueness(l.Mandatory, dulpMsgs, "mandatory")
-	uniqOptional, dulpMsgs := uniqueness(l.Optional, dulpMsgs, "optional")
-	_, dulpMsgs = uniqueness(append(uniqMandatory, uniqOptional...), dulpMsgs, "mandatory+optional")
-	_, dulpMsgs = uniqueness(append(uniqMandatory, l.JSONKey), dulpMsgs, "mandatory+jsonkey")
-	_, dulpMsgs = uniqueness(append(uniqOptional, l.JSONKey), dulpMsgs, "optional+jsonkey")
-
-	if len(dulpMsgs) > 0 {
-		return fmt.Errorf("configuration keys are duplicated: %s", strings.Join(dulpMsgs, ", "))
-	}
-
-	return nil
-}
-
-func (l MultiLoader) verifyDescriptions() error {
-	descs := keysIn(l.Description)
-	knowns := append(l.Mandatory, l.Optional...)
-
-	extras := extraItems(descs, knowns)
-	if len(extras) == 0 {
-		return nil
-	}
-
-	return fmt.Errorf("description keys are unknown: %s", strings.Join(extras, ", "))
-}
-
-func (l MultiLoader) description(flags *flag.FlagSet, item string) *string {
-	if desc, ok := l.Description[item]; ok {
-		return flags.String(item, "", desc)
-	}
-	return flags.String(item, "", item)
-}
-
-func (l MultiLoader) parseFlags(args []string, usage func(*flag.FlagSet) func()) (flagVals map[string]*string, err error) {
-	flagVals = make(map[string]*string)
+func (l MultiLoader) parseFlags(args []string, flagsHandler func(*flag.FlagSet)) (flagVals map[string]*string, err error) {
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
-	flags.Usage = usage(flags)
+	flagsHandler(flags)
 
-	for _, item := range l.Mandatory {
-		flagVals[item] = l.description(flags, item)
+	flagVals = make(map[string]*string)
+	for name, option := range l.Options {
+		if desc := option.Desc; desc != "" {
+			flagVals[name] = flags.String(name, "", desc)
+		} else {
+			flagVals[name] = flags.String(name, "", name)
+		}
 	}
-	for _, item := range l.Optional {
-		flagVals[item] = l.description(flags, item)
-	}
+
 	if l.JSONKey != "" {
 		flagVals[l.JSONKey] = flags.String(l.JSONKey, "", "JSON configuration file")
 	}
@@ -155,29 +82,24 @@ func (l MultiLoader) parseFlags(args []string, usage func(*flag.FlagSet) func())
 type mappingFunc func(key string) (value string)
 
 func (l MultiLoader) configure(config map[string]string, origin map[string]string, mapping mappingFunc, from string) {
-	for _, item := range l.Mandatory {
-		if config[item] == "" {
-			config[item] = mapping(item)
-			origin[item] = from
-		}
-	}
-	for _, item := range l.Optional {
-		if config[item] == "" {
-			config[item] = mapping(item)
-			origin[item] = from
+	for name, _ := range l.Options {
+		if config[name] == "" {
+			config[name] = mapping(name)
+			origin[name] = from
 		}
 	}
 }
 
 func (l MultiLoader) verifyMandatoryPresent(config map[string]string) error {
 	var missing []string
-	for _, item := range l.Mandatory {
-		if config[item] == "" {
-			missing = append(missing, item)
+	for name, option := range l.Options {
+		if config[name] == "" && option.Mandatory {
+			missing = append(missing, name)
 		}
 	}
 
 	if len(missing) > 0 {
+		sort.Strings(missing)
 		return fmt.Errorf("missing mandatory configurations: %s", strings.Join(missing, ", "))
 	}
 

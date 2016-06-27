@@ -25,13 +25,13 @@ const (
 )
 
 func TestLoadFromFlags(t *testing.T) {
-	loader := &MultiLoader{
-		Mandatory:   []string{"man"},
-		Optional:    []string{"opt"},
-		Description: map[string]string{"man": "mandatory item"},
+	options := map[string]Option{
+		"man": Option{Desc: "mandatory item", Mandatory: true},
+		"opt": Option{},
 	}
-	config, origin, err := loader.load([]string{"-man", manf, "-opt", optf}, sampleUsage)
+	loader := &MultiLoader{Options: options}
 
+	config, origin, err := loader.load([]string{"-man", manf, "-opt", optf}, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
@@ -45,13 +45,16 @@ func TestLoadFromJSON(t *testing.T) {
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
-	loader := &MultiLoader{
-		JSONKey:   "conf",
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
+	options := map[string]Option{
+		"man": Option{Mandatory: true},
+		"opt": Option{},
 	}
-	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleUsage)
+	loader := &MultiLoader{
+		Options: options,
+		JSONKey: "conf",
+	}
 
+	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
@@ -68,12 +71,13 @@ func TestLoadFromEnvironment(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &MultiLoader{
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
+	options := map[string]Option{
+		"man": Option{Mandatory: true},
+		"opt": Option{},
 	}
-	config, origin, err := loader.load(nil, sampleUsage)
+	loader := &MultiLoader{Options: options}
 
+	config, origin, err := loader.load(nil, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
@@ -83,13 +87,13 @@ func TestLoadFromEnvironment(t *testing.T) {
 }
 
 func TestLoadFromDefaults(t *testing.T) {
-	loader := &MultiLoader{
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
-		Defaults:  map[string]string{"man": mand, "opt": optd},
+	options := map[string]Option{
+		"man": Option{Default: mand, Mandatory: true},
+		"opt": Option{Default: optd},
 	}
-	config, origin, err := loader.load(nil, sampleUsage)
+	loader := &MultiLoader{Options: options}
 
+	config, origin, err := loader.load(nil, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], mand, "Expected mandatory defaults config to be extracted")
@@ -110,14 +114,13 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &MultiLoader{
-		JSONKey:   "conf",
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
-		Defaults:  map[string]string{"man": mand, "opt": optd},
+	options := map[string]Option{
+		"man": Option{Default: mand, Mandatory: true},
+		"opt": Option{Default: optd},
 	}
-	config, origin, err := loader.load([]string{"-conf", jsonFile, "-man", manf, "-opt", optf}, sampleUsage)
+	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
+	config, origin, err := loader.load([]string{"-conf", jsonFile, "-man", manf, "-opt", optf}, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
@@ -138,14 +141,13 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &MultiLoader{
-		JSONKey:   "conf",
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
-		Defaults:  map[string]string{"man": mand, "opt": optd},
+	options := map[string]Option{
+		"man": Option{Default: mand, Mandatory: true},
+		"opt": Option{Default: optd},
 	}
-	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleUsage)
+	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
+	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
@@ -162,14 +164,13 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 	requireNoError(t, err, "Expected no error setting environment")
 	defer os.Unsetenv("opt")
 
-	loader := &MultiLoader{
-		JSONKey:   "conf",
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
-		Defaults:  map[string]string{"man": mand, "opt": optd},
+	options := map[string]Option{
+		"man": Option{Default: mand, Mandatory: true},
+		"opt": Option{Default: optd},
 	}
-	config, origin, err := loader.load(nil, sampleUsage)
+	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
+	config, origin, err := loader.load(nil, sampleFlagsHandler)
 	requireNoError(t, err, "Expected no error loading conf")
 
 	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
@@ -179,12 +180,13 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 }
 
 func TestFlagParseError(t *testing.T) {
-	loader := &MultiLoader{
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
+	options := map[string]Option{
+		"man": Option{Mandatory: true},
+		"opt": Option{},
 	}
-	config, origin, err := loader.load([]string{"-many", "-opty"}, sampleUsage)
+	loader := &MultiLoader{Options: options}
 
+	config, origin, err := loader.load([]string{"-many", "-opty"}, sampleFlagsHandler)
 	requireError(t, err, "Expected error loading conf with bad flags")
 	assertContains(t, err.Error(), "conf.Load: error parsing flags: ", "Expected flag parse error message")
 
@@ -193,13 +195,13 @@ func TestFlagParseError(t *testing.T) {
 }
 
 func TestJSONFileReadError(t *testing.T) {
-	loader := &MultiLoader{
-		JSONKey:   "conf",
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
+	options := map[string]Option{
+		"man": Option{Mandatory: true},
+		"opt": Option{},
 	}
-	config, origin, err := loader.load([]string{"-conf", "file-does-not-exist"}, sampleUsage)
+	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
+	config, origin, err := loader.load([]string{"-conf", "file-does-not-exist"}, sampleFlagsHandler)
 	requireError(t, err, "Expected error loading conf with non-existing JSON file")
 	assertContains(t, err.Error(), "conf.Load: error reading JSON file: ", "Expected JSON file read error message")
 
@@ -212,13 +214,13 @@ func TestJSONFileParseError(t *testing.T) {
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
-	loader := &MultiLoader{
-		JSONKey:   "conf",
-		Mandatory: []string{"man"},
-		Optional:  []string{"opt"},
+	options := map[string]Option{
+		"man": Option{Mandatory: true},
+		"opt": Option{},
 	}
-	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleUsage)
+	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
+	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
 	requireError(t, err, "Expected error loading conf with malformed JSON file")
 	assertContains(t, err.Error(), "conf.Load: error parsing JSON file: ", "Expected JSON file parse error message")
 
@@ -227,13 +229,17 @@ func TestJSONFileParseError(t *testing.T) {
 }
 
 func TestMissingMandatoryConfigError(t *testing.T) {
-	loader := &MultiLoader{
-		Mandatory: []string{"man", "man2", "man3"},
-		Optional:  []string{"opt", "opt2", "opt3"},
-		Defaults:  map[string]string{"man": mand, "opt": optd},
+	options := map[string]Option{
+		"man":  Option{Default: mand, Mandatory: true},
+		"man2": Option{Mandatory: true},
+		"man3": Option{Mandatory: true},
+		"opt":  Option{Default: optd},
+		"opt2": Option{},
+		"opt3": Option{},
 	}
-	config, origin, err := loader.load(nil, sampleUsage)
+	loader := &MultiLoader{Options: options}
 
+	config, origin, err := loader.load(nil, sampleFlagsHandler)
 	requireError(t, err, "Expected error loading conf with missing mandatory configurations")
 	assertEqual(t, err.Error(), "conf.Load: missing mandatory configurations: man2, man3", "Expected missing mandatory configurations")
 
@@ -241,69 +247,29 @@ func TestMissingMandatoryConfigError(t *testing.T) {
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
 }
 
-func TestFlagKeyCollisionsError(t *testing.T) {
-	loader := &MultiLoader{
-		JSONKey:   "shr",
-		Mandatory: []string{"man", "man", "man1", "man1", "shr1", "shr2", "shr"},
-		Optional:  []string{"opt", "opt", "opt1", "opt1", "shr1", "shr2", "shr"},
-		Defaults:  map[string]string{"man": mand, "opt": optd},
-	}
-	config, origin, err := loader.load(nil, sampleUsage)
-
-	requireError(t, err, "Expected error loading conf with overlapping mandatory and optional configurations")
-	assertEqual(t, err.Error(), "conf.Load: configuration keys are duplicated: mandatory(man, man1), optional(opt, opt1), mandatory+optional(shr1, shr2, shr), mandatory+jsonkey(shr), optional+jsonkey(shr)", "Expected overlapping configurations")
-
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
-}
-
-func TestUnknownDescriptionKeyError(t *testing.T) {
-	loader := &MultiLoader{
-		Mandatory:   []string{"man"},
-		Optional:    []string{"opt"},
-		Description: map[string]string{"man1": "man1 description", "opt": "opt description", "opt1": "opt1 description"},
-		Defaults:    map[string]string{"man": mand, "opt": optd},
-	}
-	config, origin, err := loader.load(nil, sampleUsage)
-
-	requireError(t, err, "Expected error loading conf with unknown description")
-	assertContains(t, err.Error(), "conf.Load: description keys are unknown: ", "Expected unknown descriptions")
-	assertContains(t, err.Error(), "man1", "Expected unknown descriptions")
-	assertContains(t, err.Error(), "opt1", "Expected unknown descriptions")
-
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
-}
-
-func TestEmptyKeyError(t *testing.T) {
-	loader := &MultiLoader{
-		Mandatory: []string{"man", ""},
-		Optional:  []string{"opt", ""},
-	}
-	config, origin, err := loader.load(nil, sampleUsage)
-
-	requireError(t, err, "Expected error loading conf with empty configurations")
-	assertEqual(t, err.Error(), "conf.Load: empty keys exist: mandatory, optional", "Expected empty configuration error")
-
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
-}
-
 func TestFuzzError1(t *testing.T) {
-	loader := &MultiLoader{
-		JSONKey:   "Ĺ",
-		Mandatory: []string{"5Ò劯YņëHƋ訖玲薯ŀ", "CƱ屼=ðȡ", "E聻阑l", "FŧÒ簠}ZĀi>2鯢鎗觡ǲ", "r刍ĵsJ", "Ĺ", "効谄縫BɈ璻)隽Ld", "固[飳Ɛ茞燂Yi衮ɼO榲\u00adȾ", "鮀ȯIÏ忞"},
-		Optional:  []string{"Rl:O", "^4uſǖʈƩʟǑȶªIƙǨ鋜", "e郊Ɔ鏬挋眖筎:ûǽǬ鴜Ȃ", "i莝á沷俜ƦǱ缘Ín痐U"},
+	options := map[string]Option{
+		"5Ò劯YņëHƋ訖玲薯ŀ":        Option{Mandatory: true},
+		"CƱ屼=ðȡ":              Option{Mandatory: true},
+		"E聻阑l":                Option{Mandatory: true},
+		"FŧÒ簠}ZĀi>2鯢鎗觡ǲ":      Option{Mandatory: true},
+		"r刍ĵsJ":               Option{Mandatory: true},
+		"効谄縫BɈ璻)隽Ld":          Option{Mandatory: true},
+		"固[飳Ɛ茞燂Yi衮ɼO榲\u00adȾ": Option{Mandatory: true},
+		"鮀ȯIÏ忞":               Option{Mandatory: true},
+		"Rl:O":                Option{},
+		"^4uſǖʈƩʟǑȶªIƙǨ鋜": Option{},
+		"e郊Ɔ鏬挋眖筎:ûǽǬ鴜Ȃ":   Option{},
+		"i莝á沷俜ƦǱ缘Ín痐U":    Option{},
 	}
+	loader := &MultiLoader{Options: options, JSONKey: "Ĺ"}
 
-	config, origin, err := loader.load(nil, sampleUsage)
+	config, origin, err := loader.load(nil, sampleFlagsHandler)
 	requireError(t, err, "Expected error loading conf with empty configurations")
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
 }
 
-func sampleUsage(flags *flag.FlagSet) func() {
-	return func() {
-		flags.SetOutput(ioutil.Discard)
-	}
+func sampleFlagsHandler(flags *flag.FlagSet) {
+	flags.SetOutput(ioutil.Discard)
 }

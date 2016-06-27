@@ -46,7 +46,7 @@ $(GOPATH)/src/$(gofuzz):
 
 .PHONY: fuzz
 fuzz: $(GOPATH)/src/$(gofuzz)
-	${GO} test -v ./fuzz -timeout 1h
+	${GO} test -v . -timeout 1h -tags fuzz
 
 out/example: $(sources) examples/example.go
 	${GO} build -o out/example ./examples

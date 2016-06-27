@@ -7,13 +7,17 @@ import (
 )
 
 func main() {
+	options := map[string]conf.Option{
+		"foo": conf.Option{Desc: "a description for foo", Default: "default foo", Mandatory: true},
+		"bar": conf.Option{Mandatory: true},
+		"baz": conf.Option{Desc: "a description for baz"},
+		"qux": conf.Option{},
+	}
+
 	loader := conf.MultiLoader{
-		JSONKey:     "shr",
-		Mandatory:   []string{"foo", "bar"},
-		Optional:    []string{"baz", "qux"},
-		Defaults:    map[string]string{"foo": "default foo"},
-		Description: map[string]string{"foo": "a description for foo", "baz": "a description for baz"},
-		Usage:       "Example application",
+		JSONKey: "shr",
+		Options: options,
+		Usage:   "Example application",
 	}
 
 	config, origin, err := loader.Load()
