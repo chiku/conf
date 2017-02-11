@@ -1,5 +1,11 @@
 package conf
 
+// utils.go
+//
+// Author::    Chirantan Mitra
+// Copyright:: Copyright (c) 2016-2017. All rights reserved
+// License::   MIT
+
 import (
 	"encoding/json"
 	"fmt"
