@@ -14,6 +14,12 @@ import (
 	"strings"
 )
 
+type Option struct {
+	Default   string
+	Desc      string
+	Mandatory bool
+}
+
 type MultiLoader struct {
 	Options map[string]Option
 	JSONKey string

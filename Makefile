@@ -19,7 +19,6 @@ endif
 MKDIR = mkdir -p
 RM = rm -rvf
 GO = go
-GLIDE = $(GOPATH)/bin/glide
 
 sources := $(wildcard *.go)
 gofuzz = github.com/google/gofuzz
@@ -27,26 +26,26 @@ coverage = coverage
 coverage_out = $(coverage)/coverage.out
 coverage_html = $(coverage)/coverage.html
 
-.PHONY: all
 all: fmt vet test out/example
+.PHONY: all
 
-.PHONY: fmt
 fmt:
 	${GO} fmt
+.PHONY: fmt
 
-.PHONY: vet
 vet:
 	${GO} vet
+.PHONY: vet
 
-.PHONY: test
 test: $(coverage_html)
+.PHONY: test
 
 $(GOPATH)/src/$(gofuzz):
 	go get $(gofuzz)
 
-.PHONY: fuzz
 fuzz: $(GOPATH)/src/$(gofuzz)
 	${GO} test -v . -timeout 1h -tags fuzz
+.PHONY: fuzz
 
 out/example: $(sources) examples/example.go
 	${GO} build -o out/example ./examples
@@ -54,9 +53,9 @@ out/example: $(sources) examples/example.go
 $(coverage):
 	${MKDIR} $(coverage)
 
-.PHONY: clean
 clean:
 	${RM} $(coverage)
+.PHONY: clean
 
 $(coverage_out): $(sources) $(coverage)
 	${GO} test -coverprofile=$(coverage_out)
