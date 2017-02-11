@@ -1,7 +1,6 @@
 # conf
 
 [![Build Status](https://travis-ci.org/chiku/conf.svg?branch=master)](https://travis-ci.org/chiku/conf)
-[![Build Status](https://drone.io/github.com/chiku/conf/status.png)](https://drone.io/github.com/chiku/conf/latest)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/chiku/conf)
 [![Coverage Status](https://coveralls.io/repos/github/chiku/conf/badge.svg?branch=master)](https://coveralls.io/github/chiku/conf?branch=master)
 [![Coverage Status](https://img.shields.io/badge/Coverage-Run-green.svg)](http://gocover.io/github.com/chiku/conf)
