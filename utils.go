@@ -26,16 +26,15 @@ func parseJSON(file *string) (map[string]string, error) {
 
 	err = json.Unmarshal(content, &config)
 	if err != nil {
-		details := ""
 		if serr, ok := err.(*json.SyntaxError); ok {
-			details = fmt.Sprintf(" (syntax error at offset: %d)", serr.Offset)
+			return nil, fmt.Errorf("json: syntax error at offset %d: %s", serr.Offset, err)
 		}
 
-		if serr, ok := err.(*json.UnmarshalTypeError); ok {
-			details = fmt.Sprintf(" (type error at offset: %d)", serr.Offset)
+		if terr, ok := err.(*json.UnmarshalTypeError); ok {
+			return nil, fmt.Errorf("json: type error at offset %d: %s", terr.Offset, err)
 		}
 
-		return nil, fmt.Errorf("error parsing JSON file: %s%s", err, details)
+		return nil, fmt.Errorf("json: %s", err)
 	}
 
 	return config, nil

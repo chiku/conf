@@ -54,8 +54,7 @@ func TestParseJSONWithMalformedJSON(t *testing.T) {
 	data, err := parseJSON(&jsonFile)
 
 	requireError(t, err, "Expected error parsing malformed JSON file")
-	assertContains(t, err.Error(), "error parsing JSON file: ", "Expected JSON parse error")
-	assertContains(t, err.Error(), "(syntax error at offset: 1)", "Expected JSON syntax error")
+	assertContains(t, err.Error(), "json: syntax error at offset 1: ", "Expected JSON parse error")
 	assertEqual(t, len(data), 0, "Expected no JSON data")
 }
 
@@ -66,7 +65,6 @@ func TestParseJSONWithNonStringJSONValues(t *testing.T) {
 	data, err := parseJSON(&jsonFile)
 
 	requireError(t, err, "Expected error parsing malformed JSON file")
-	assertContains(t, err.Error(), "error parsing JSON file: ", "Expected JSON parse error")
-	assertContains(t, err.Error(), "(type error at offset: 12)", "Expected JSON type error")
+	assertContains(t, err.Error(), "json: type error at offset 12: ", "Expected JSON parse error")
 	assertEqual(t, len(data), 0, "Expected no JSON data")
 }

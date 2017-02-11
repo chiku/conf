@@ -228,7 +228,7 @@ func TestJSONFileParseError(t *testing.T) {
 
 	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
 	requireError(t, err, "Expected error loading conf with malformed JSON file")
-	assertContains(t, err.Error(), "conf.Load: error parsing JSON file: ", "Expected JSON file parse error message")
+	assertContains(t, err.Error(), "conf.Load: json: ", "Expected JSON file parse error message")
 
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
