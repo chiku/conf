@@ -14,17 +14,20 @@ import (
 	"io/ioutil"
 	"os"
 	"runtime/debug"
+	"strconv"
 	"testing"
 
 	"github.com/google/gofuzz"
 )
 
-const (
-	max        = 15000000
-	notifyStep = 10000
-)
-
 func TestConfFuzzRandom(t *testing.T) {
+	maxSteps := 15000000
+	if maxStensEnv, err := strconv.Atoi(os.Getenv("MAX_STEPS")); err == nil && maxStensEnv != 0 {
+		maxSteps = maxStensEnv
+	}
+
+	notifyStep := maxSteps / 1000
+
 	var options map[string]Option
 	var jsonKey string
 	var args []string
@@ -50,7 +53,7 @@ func TestConfFuzzRandom(t *testing.T) {
 		}
 	}()
 
-	for i := 0; i <= max; i++ {
+	for i := 0; i <= maxSteps; i++ {
 		f.Fuzz(&options)
 		f.Fuzz(&jsonKey)
 		f.Fuzz(&args)
@@ -68,7 +71,7 @@ func TestConfFuzzRandom(t *testing.T) {
 		}
 
 		if i%notifyStep == 0 {
-			fmt.Fprintf(os.Stdout, "\r%0.1f%%", float64(i)/float64(max)*100.0)
+			fmt.Fprintf(os.Stdout, "\r%0.1f%%", float64(i)/float64(maxSteps)*100.0)
 		}
 	}
 	fmt.Fprintf(os.Stderr, "\nComplete...\n")

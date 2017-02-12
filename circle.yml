@@ -1,3 +1,7 @@
+dependencies:
+  override:
+    - go get github.com/google/gofuzz
+
 test:
   override:
-    - make
+    - MAX_STEPS=500000 go test . -tags fuzz -v -timeout 5m
