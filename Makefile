@@ -22,11 +22,12 @@ GO = go
 
 sources := $(wildcard *.go)
 gofuzz = github.com/google/gofuzz
-coverage = coverage
+example = out/example
+coverage = out/coverage
 coverage_out = $(coverage)/coverage.out
 coverage_html = $(coverage)/coverage.html
 
-all: fmt vet test out/example
+all: fmt vet test $(example)
 .PHONY: all
 
 fmt:
@@ -48,16 +49,14 @@ fuzz: $(GOPATH)/src/$(gofuzz)
 .PHONY: fuzz
 
 out/example: $(sources) examples/example.go
-	${GO} build -o out/example ./examples
-
-$(coverage):
-	${MKDIR} $(coverage)
+	${GO} build -o $(example) ./examples
 
 clean:
-	${RM} $(coverage)
+	${RM} $(coverage) $(example)
 .PHONY: clean
 
-$(coverage_out): $(sources) $(coverage)
+$(coverage_out): $(sources)
+	${MKDIR} $(coverage)
 	${GO} test -coverprofile=$(coverage_out)
 
 $(coverage_html): $(coverage_out)
