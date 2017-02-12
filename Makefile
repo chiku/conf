@@ -22,6 +22,7 @@ GO = go
 
 sources := $(wildcard *.go)
 gofuzz = github.com/google/gofuzz
+gofuzz_path = $(GOPATH)/src/$(gofuzz)
 example = out/example
 coverage = out/coverage
 coverage_out = $(coverage)/coverage.out
@@ -41,10 +42,10 @@ vet:
 test: $(coverage_html)
 .PHONY: test
 
-$(GOPATH)/src/$(gofuzz):
+$(gofuzz_path):
 	go get $(gofuzz)
 
-fuzz: $(GOPATH)/src/$(gofuzz)
+fuzz: $(sources) $(gofuzz_path)
 	${GO} test -v . -timeout 1h -tags fuzz
 .PHONY: fuzz
 
