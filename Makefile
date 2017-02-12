@@ -22,7 +22,7 @@ GO = go
 
 sources := $(wildcard *.go)
 gofuzz = github.com/google/gofuzz
-gofuzz_path = $(GOPATH)/src/$(gofuzz)
+gofuzz_path := $(GOPATH)/src/$(gofuzz)
 example = out/example
 coverage = out/coverage
 coverage_out = $(coverage)/coverage.out
