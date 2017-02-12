@@ -14,4 +14,4 @@ install:
 
 script:
   - make
-  - goveralls -v -service travis-ci -repotoken $COVERALLS_TOKEN
+  - goveralls -package github.com/chiku/conf -repotoken $COVERALLS_TOKEN
