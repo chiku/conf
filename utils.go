@@ -12,6 +12,8 @@ import (
 	"io/ioutil"
 )
 
+// parseJSON parses a JSON file with the given name into a map of key-value strings.
+// It fail if the keys are not strings or the file has more than one level of nesting.
 func parseJSON(file *string) (map[string]string, error) {
 	var config map[string]string
 
