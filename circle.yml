@@ -5,7 +5,6 @@ dependencies:
 
 test:
   override:
-    - MAX_STEPS=500000 go test . -tags fuzz -v -timeout 5m
-    - ./fuzz.sh
+    - MAX_STEPS=500000 ./fuzz.sh
     - ./build.sh
     - goveralls -package github.com/chiku/conf -repotoken $COVERALLS_TOKEN -service=circle-ci

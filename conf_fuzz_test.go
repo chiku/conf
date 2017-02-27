@@ -71,7 +71,7 @@ func TestConfFuzzRandom(t *testing.T) {
 		}
 
 		if i%notifyStep == 0 {
-			fmt.Fprintf(os.Stdout, "\r%0.1f%%", float64(i)/float64(maxSteps)*100.0)
+			fmt.Fprintf(os.Stdout, "\r%0.1f%% ", float64(i)/float64(maxSteps)*100.0)
 		}
 	}
 	fmt.Fprintf(os.Stderr, "\nComplete...\n")
