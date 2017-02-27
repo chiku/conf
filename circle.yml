@@ -1,10 +1,7 @@
-dependencies:
+test:
   override:
     - go get -v github.com/google/gofuzz
     - go get -v github.com/mattn/goveralls
-
-test:
-  override:
-    - MAX_STEPS=500000 ./fuzz.sh
     - ./build.sh
     - goveralls -package github.com/chiku/conf -repotoken $COVERALLS_TOKEN -service=circle-ci
+    - MAX_STEPS=500000 ./fuzz.sh
