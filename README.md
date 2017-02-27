@@ -12,17 +12,17 @@ Development prerequisites
 
 * Install `make`
 * [Install golang](https://golang.org/doc/install)
-* Add `$GOPTAH/bin` to `PATH`
+* Add `$GOPATH/bin` to `PATH`
 
 Running tests
 -------------
 
 ```shell
 # unit tests
-make all
+./build.sh
 
 # fuzzy tests
-make fuzz
+./fuzz.sh
 ```
 
 Contributing

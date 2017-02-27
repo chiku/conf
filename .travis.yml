@@ -9,4 +9,4 @@ go:
 install:
 
 script:
-  - make
+  - ./build.sh
