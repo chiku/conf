@@ -5,13 +5,7 @@ go:
   - 1.6
   - 1.7
 
-env:
-  global:
-    secure: IzcKcMjwqn0oMHBg6PjmgTnoC4GILknWSsecEkoyGvAaXoBnLi6XcUY5Amfy4mpJTQv8PpP1vDUUTswqs1gQiGEaGOd6YHrLUiR1RfpVx6e0vhQwLkJRT+k5Jrx8SCyvp4wOpT+OcpgmH8wQhYpnR6wH/RVWUno7RUZwWov/OKev8NIEGVQ0G9jYrdJel8FpNVKjQSP7iNBA+Z5PfNhZYjsE8YaKW0wtxbbhvb+Ep8JtUJytsKe5M+CCXg3b9LKA9e2OS+ZourzsvcIOPSeO33Qbcvl4o8wHLcqYqICOPmxMFM7ncRG48JAd1mRkvmMV2a3PuV9KCfMmHy1PDJHSLhPucXeHoDUOWa25xsJU+xxEDECp2LUyKKKPt093HrCsp59HvwspsBNxf4y6Dm23bz0jlBqujNN90zwA4R/VqnwWVXf04963+cQJLnkq+PGlZ7s0YrMmuWXZAK0P5JepYdiBH9lZ+eLtHVVZxi37TgCybR0Ka83y0Be4im5HdWuKJLC/+tI4BgLihSSoDJFJdBD8sE4snFqRzEfETT5HaR4j+5iQYA0w0cyzFoYo6LzbMGo8pva/cMhf0frcjoKTkvS7ZT01DmP02FcHVPrl1VwpBRktNEFHOvWRrrvMuWrZ/2b7M7mVuOX8IdGb+SVU160tr/6ZxfQrMpLSdIyhJ/s=
-
 install:
-  - go get -v github.com/mattn/goveralls
 
 script:
   - make
-  - goveralls -package github.com/chiku/conf -repotoken $COVERALLS_TOKEN

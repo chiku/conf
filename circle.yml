@@ -1,7 +1,10 @@
 dependencies:
   override:
-    - go get github.com/google/gofuzz
+    - go get -v github.com/google/gofuzz
+    - go get -v github.com/mattn/goveralls
 
 test:
   override:
     - MAX_STEPS=500000 go test . -tags fuzz -v -timeout 5m
+    - make clean all
+    - goveralls -package github.com/chiku/conf -repotoken $COVERALLS_TOKEN -service=circle-ci
