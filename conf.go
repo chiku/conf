@@ -75,7 +75,7 @@ type MultiLoader struct {
 
 // Load extracts configuration from different sources. It returns the configuration and their origin, and an error if present.
 // The configurations are loaded in following order.
-
+//
 //   1. command-line arguments.
 //   2. JSON file mentioned in JSONKey.
 //   3. environment variable.
