@@ -1,9 +1,45 @@
-// conf.go
+// Package conf is for extracting application configuration.
+// It uses configuration from command-line arguments, JSON file,
+// environment variable or default value.
 //
-// Author::    Chirantan Mitra
-// Copyright:: Copyright (c) 2016-2017. All rights reserved
-// License::   MIT
-
+// example.go
+//
+//  import (
+//  	"fmt"
+//
+//  	"github.com/chiku/conf"
+//  )
+//
+//  func main() {
+//  	options := map[string]conf.Option{
+//  		"foo": conf.Option{Desc: "a description for foo", Default: "default foo", Mandatory: true},
+//  		"bar": conf.Option{Mandatory: true},
+//  		"baz": conf.Option{Desc: "a description for baz"},
+//  		"qux": conf.Option{},
+//  	}
+//
+//  	loader := conf.MultiLoader{
+//  		JSONKey: "shr",
+//  		Options: options,
+//  		Usage:   "Example application",
+//  	}
+//
+//  	config, origin, err := loader.Load()
+//
+//  	if err != nil {
+//  		fmt.Printf("error: %s\n", err)
+//  		return
+//  	}
+//
+//  	fmt.Printf("configuration: %#v\n", config)
+//  	fmt.Printf("origin: %#v\n", origin)
+//  }
+//
+// Usage
+//
+//     go build -o example example.go
+//     ./example -foo fooval -bar barval -shr file.json
+//
 package conf
 
 import (
@@ -39,17 +75,18 @@ type MultiLoader struct {
 
 // Load extracts configuration from different sources. It returns the configuration and their origin, and an error if present.
 // The configurations are loaded in following order.
-// 1. command-line arguments.
-// 2. JSON file mentioned in JSONKey.
-// 3. environment variable.
-// 4. default values.
+
+//   1. command-line arguments.
+//   2. JSON file mentioned in JSONKey.
+//   3. environment variable.
+//   4. default values.
 // The origin is returned as a string and can be one of "Flags", "JSON", "Environment" or "Defaults"
 // based on what was matched when looking up for the configuration.
 // The configuration is always returned as a map[string]string.
 // Load() returns an error in the following cases.
-// 1. command-line argument parse fails
-// 2. JSON parse fails
-// 3. mandatory configuration was not provided.
+//   1. command-line argument parse fails
+//   2. JSON parse fails
+//   3. mandatory configuration was not provided.
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
 	program, args := os.Args[0], os.Args[1:]
 	flagsHandler := func(flags *flag.FlagSet) {
