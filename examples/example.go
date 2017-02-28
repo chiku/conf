@@ -8,7 +8,11 @@ import (
 
 func main() {
 	options := map[string]conf.Option{
-		"foo": conf.Option{Desc: "a description for foo", Default: "default foo", Mandatory: true},
+		"foo": conf.Option{
+			Desc:      "a description for foo",
+			Default:   "default foo",
+			Mandatory: true,
+		},
 		"bar": conf.Option{Mandatory: true},
 		"baz": conf.Option{Desc: "a description for baz"},
 		"qux": conf.Option{},
