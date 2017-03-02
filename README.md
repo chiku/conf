@@ -10,7 +10,6 @@
 Development prerequisites
 -------------------------
 
-* Install `make`
 * [Install golang](https://golang.org/doc/install)
 * Add `$GOPATH/bin` to `PATH`
 
@@ -24,6 +23,10 @@ Running tests
 # fuzzy tests
 ./fuzz.sh
 ```
+Documentation
+-------------
+
+Refer https://godoc.org/github.com/chiku/conf
 
 Contributing
 ------------
