@@ -56,7 +56,8 @@ import (
 
 // An Option represents a configuration for github.com/chiku/conf
 type Option struct {
-	// Default is the value used if not provided in command-line flag, JSON file or environment variable.
+	// Default is the value used if not provided in command-line flag,
+	// JSON file or environment variable.
 	Default string
 
 	// Desc is the command line argument description.
@@ -67,24 +68,29 @@ type Option struct {
 }
 
 type MultiLoader struct {
-	// Options is a map of Option for a given configuration key. The configuration and origin returned by Load() use the same keys.
+	// Options is a map of Option for a given configuration key. The
+	// configuration and origin returned by Load() use the same keys.
 	Options map[string]Option
 
-	// JSONKey, if not empty, is the configuration key name expected for the JSON configuration file.
+	// JSONKey, if not empty, is the configuration key name expected
+	// for the JSON configuration file.
 	JSONKey string
 
-	// Usage is a description for the application. Usage shows up when the application is run with "-help".
+	// Usage is a description for the application. Usage shows up when
+	// the application is run with "-help".
 	Usage string
 }
 
-// Load extracts configuration from different sources. It returns the configuration and their origin, and an error if present.
+// Load extracts configuration from different sources. It returns the
+// configuration and their origin, and an error if present.
 // The configurations are loaded in following order.
 //   1. Command-line arguments
 //   2. JSON file mentioned in JSONKey
 //   3. Environment variable
 //   4. Default values.
 //
-// The origin is returned as a string and can be one of "Flags", "JSON", "Environment" or "Defaults"
+// The origin is returned as a string and can be one of "Flags", "JSON",
+// "Environment" or "Defaults"
 // based on what was matched when looking up for the configuration.
 // The configuration is always returned as a map[string]string.
 // Load() returns an error in the following cases.
@@ -104,7 +110,8 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	return l.load(args, flagsHandler)
 }
 
-// load extracts configuration from different sources. It returns the configuration and their origin, and an error if present.
+// load extracts configuration from different sources. It returns the
+// configuration and their origin, and an error if present.
 func (l MultiLoader) load(args []string, flagsHandler func(flags *flag.FlagSet)) (config map[string]string, origin map[string]string, err error) {
 	config = make(map[string]string)
 	origin = make(map[string]string)
@@ -132,8 +139,10 @@ func (l MultiLoader) load(args []string, flagsHandler func(flags *flag.FlagSet))
 	return config, origin, nil
 }
 
-// parseFlags parses application-level command-line flags. The flags are based on the configuration value and JSON-key flag.
-// It returns the parsed values as a map of string to pointer of strings and an error if parse fails.
+// parseFlags parses application-level command-line flags. The flags
+// are based on the configuration value and JSON-key flag. It returns
+// the parsed values as a map of string to pointer of strings and an
+// error if parse fails.
 func (l MultiLoader) parseFlags(args []string, flagsHandler func(*flag.FlagSet)) (flagVals map[string]*string, err error) {
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
 	flagsHandler(flags)
@@ -159,7 +168,8 @@ func (l MultiLoader) parseFlags(args []string, flagsHandler func(*flag.FlagSet))
 	return flagVals, nil
 }
 
-// A mappingFunc on running returns a value against a key. MappingFuncs are processed by configure.
+// A mappingFunc on running returns a value against a key. MappingFuncs
+// are processed by configure.
 type mappingFunc func(key string) (value string)
 
 // Configure adds value and origin against a key if not already present.
@@ -172,8 +182,9 @@ func (l MultiLoader) configure(config map[string]string, origin map[string]strin
 	}
 }
 
-// VerifyMandatoryPresent returns an error if one or more mandatory parameters are missing.
-// The error message reports all the missing configuration keys.
+// VerifyMandatoryPresent returns an error if one or more mandatory
+// parameters are missing. The error message reports all the missing
+// configuration keys.
 func (l MultiLoader) verifyMandatoryPresent(config map[string]string) error {
 	var missing []string
 	for name, option := range l.Options {
