@@ -61,7 +61,8 @@ func assertContains(t *testing.T, total, part, msg string) {
 	}
 }
 
-// createFile creates a temporary file with the given contents. It returns the file-name of the created file.
+// createFile creates a temporary file with the given contents.
+// It returns the file-name of the created file.
 // The caller is expected to delete the created file.
 // The test aborts on failure.
 func createFile(t *testing.T, content string) string {

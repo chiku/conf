@@ -42,7 +42,7 @@ func TestParseJSONWithNonExistingFileName(t *testing.T) {
 }
 
 func TestParseJSONWithMalformedJSON(t *testing.T) {
-	jsonFile := createFile(t, `MALFORMED`)
+	jsonFile := createFile(t, "MALFORMED")
 	defer os.Remove(jsonFile)
 
 	data, err := parseJSON(&jsonFile)

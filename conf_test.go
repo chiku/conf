@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"testing"
 )
 
@@ -245,6 +246,12 @@ func TestMissingMandatoryConfigError(t *testing.T) {
 
 	assertEqual(t, len(config), 0, "Expected configuration to not exist")
 	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+}
+
+func TestLoaderInterface(t *testing.T) {
+	interfaceType := reflect.TypeOf((*Loader)(nil)).Elem()
+	implements := reflect.TypeOf(&MultiLoader{}).Implements(interfaceType)
+	assertEqual(t, implements, true, "Expected MultiLoader to be a Loader")
 }
 
 func TestFuzzError1(t *testing.T) {

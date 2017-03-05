@@ -54,6 +54,13 @@ import (
 	"strings"
 )
 
+// A Loader represents a configuration loader.
+type Loader interface {
+	// Load extracts configuration from different sources. It returns the
+	// configuration and their origin, and an error if present.
+	Load() (config map[string]string, origin map[string]string, err error)
+}
+
 // An Option represents a configuration for github.com/chiku/conf
 type Option struct {
 	// Default is the value used if not provided in command-line flag,
@@ -67,6 +74,9 @@ type Option struct {
 	Mandatory bool
 }
 
+// MultiLoader is a configuration loader with different sources.
+// It extracts values from command-line arguments, JSON configuration file,
+// environment variable and a fallback default value.
 type MultiLoader struct {
 	// Options is a map of Option for a given configuration key. The
 	// configuration and origin returned by Load() use the same keys.
