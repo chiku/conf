@@ -111,7 +111,7 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 	program, args := os.Args[0], os.Args[1:]
 	flagsHandler := func(flags *flag.FlagSet) {
 		flags.Usage = func() {
-			fmt.Fprintf(os.Stderr, "%s: %s\n\nParameters:\n", program, l.Usage)
+			fmt.Printf("%s: %s\n\nParameters:\n", program, l.Usage)
 			flags.PrintDefaults()
 			os.Exit(0)
 		}
@@ -184,7 +184,7 @@ type mappingFunc func(key string) (value string)
 
 // Configure adds value and origin against a key if not already present.
 func (l MultiLoader) configure(config map[string]string, origin map[string]string, mapping mappingFunc, from string) {
-	for name, _ := range l.Options {
+	for name := range l.Options {
 		if config[name] == "" {
 			config[name] = mapping(name)
 			origin[name] = from
