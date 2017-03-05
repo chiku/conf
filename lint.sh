@@ -5,4 +5,4 @@ IFS=$'\n\t'
 
 go get -u github.com/alecthomas/gometalinter
 gometalinter --install
-gometalinter -t --vendor ./... --deadline 1m
+gometalinter -t --vendor . --deadline 1m
