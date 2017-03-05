@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -33,12 +34,23 @@ func TestLoadFromFlags(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load([]string{"-man", manf, "-opt", optf}, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from flags: %s", err)
+	}
 
-	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
-	assertEqual(t, config["opt"], optf, "Expected optional flags config to be extracted")
-	assertEqual(t, origin["man"], flagsOrig, "Expected mandatory config to be provided by flags")
-	assertEqual(t, origin["opt"], flagsOrig, "Expected optional config to be provided by flags")
+	expectedConfig := map[string]string{"man": manf, "opt": optf}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from flags")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": flagsOrig, "opt": flagsOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from flags")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestLoadFromJSON(t *testing.T) {
@@ -56,20 +68,34 @@ func TestLoadFromJSON(t *testing.T) {
 	}
 
 	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from JSON file: %s", err)
+	}
 
-	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
-	assertEqual(t, config["opt"], optj, "Expected optional JSON config to be extracted")
-	assertEqual(t, origin["man"], jsonOrig, "Expected mandatory config to be provided by JSON")
-	assertEqual(t, origin["opt"], jsonOrig, "Expected optional config to be provided by JSON")
+	expectedConfig := map[string]string{"man": manj, "opt": optj}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from JSON file")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": jsonOrig, "opt": jsonOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from JSON file")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestLoadFromEnvironment(t *testing.T) {
-	err := os.Setenv("man", mane)
-	requireNoError(t, err, "Expected no error setting environment")
+	if err := os.Setenv("man", mane); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("man")
-	err = os.Setenv("opt", opte)
-	requireNoError(t, err, "Expected no error setting environment")
+
+	if err := os.Setenv("opt", opte); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("opt")
 
 	options := map[string]Option{
@@ -79,12 +105,23 @@ func TestLoadFromEnvironment(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load(nil, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from environment variables: %s", err)
+	}
 
-	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
-	assertEqual(t, config["opt"], opte, "Expected optional environment config to be extracted")
-	assertEqual(t, origin["man"], envOrig, "Expected mandatory config to be provided by environment")
-	assertEqual(t, origin["opt"], envOrig, "Expected optional config to be provided by environment")
+	expectedConfig := map[string]string{"man": mane, "opt": opte}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from environment variables")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": envOrig, "opt": envOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from environment variables")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestLoadFromDefaults(t *testing.T) {
@@ -95,12 +132,23 @@ func TestLoadFromDefaults(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load(nil, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from defaults: %s", err)
+	}
 
-	assertEqual(t, config["man"], mand, "Expected mandatory defaults config to be extracted")
-	assertEqual(t, config["opt"], optd, "Expected optional defaults config to be extracted")
-	assertEqual(t, origin["man"], defaultsOrig, "Expected mandatory config to be provided by defaults")
-	assertEqual(t, origin["opt"], defaultsOrig, "Expected optional config to be provided by defaults")
+	expectedConfig := map[string]string{"man": mand, "opt": optd}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from defaults")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": defaultsOrig, "opt": defaultsOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from defaults")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
@@ -108,11 +156,14 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
-	err := os.Setenv("man", mane)
-	requireNoError(t, err, "Expected no error setting environment")
+	if err := os.Setenv("man", mane); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("man")
-	err = os.Setenv("opt", opte)
-	requireNoError(t, err, "Expected no error setting environment")
+
+	if err := os.Setenv("opt", opte); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("opt")
 
 	options := map[string]Option{
@@ -122,12 +173,23 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
 	config, origin, err := loader.load([]string{"-conf", jsonFile, "-man", manf, "-opt", optf}, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from flags, JSON, environment variable and defaults: %s", err)
+	}
 
-	assertEqual(t, config["man"], manf, "Expected mandatory flags config to be extracted")
-	assertEqual(t, config["opt"], optf, "Expected optional flags config to be extracted")
-	assertEqual(t, origin["man"], flagsOrig, "Expected mandatory config to be provided by flags")
-	assertEqual(t, origin["opt"], flagsOrig, "Expected optional config to be provided by flags")
+	expectedConfig := map[string]string{"man": manf, "opt": optf}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from flags, JSON, environment variable and defaults")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": flagsOrig, "opt": flagsOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from flags, JSON, environment variable and defaults")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
@@ -135,11 +197,14 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 	jsonFile := createFile(t, content)
 	defer os.Remove(jsonFile)
 
-	err := os.Setenv("man", mane)
-	requireNoError(t, err, "Expected no error setting environment")
+	if err := os.Setenv("man", mane); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("man")
-	err = os.Setenv("opt", opte)
-	requireNoError(t, err, "Expected no error setting environment")
+
+	if err := os.Setenv("opt", opte); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("opt")
 
 	options := map[string]Option{
@@ -149,20 +214,34 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
 	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from JSON, environment variable and defaults: %s", err)
+	}
 
-	assertEqual(t, config["man"], manj, "Expected mandatory JSON config to be extracted")
-	assertEqual(t, config["opt"], optj, "Expected optional JSON config to be extracted")
-	assertEqual(t, origin["man"], jsonOrig, "Expected mandatory config to be provided by json")
-	assertEqual(t, origin["opt"], jsonOrig, "Expected optional config to be provided by json")
+	expectedConfig := map[string]string{"man": manj, "opt": optj}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from JSON, environment variable and defaults")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": jsonOrig, "opt": jsonOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from JSON, environment variable and defaults")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
-	err := os.Setenv("man", mane)
-	requireNoError(t, err, "Expected no error setting environment")
+	if err := os.Setenv("man", mane); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("man")
-	err = os.Setenv("opt", opte)
-	requireNoError(t, err, "Expected no error setting environment")
+
+	if err := os.Setenv("opt", opte); err != nil {
+		t.Fatalf("Unexpected error setting environment variable: %s", err)
+	}
 	defer os.Unsetenv("opt")
 
 	options := map[string]Option{
@@ -172,12 +251,23 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
 	config, origin, err := loader.load(nil, sampleFlagsHandler)
-	requireNoError(t, err, "Expected no error loading conf")
+	if err != nil {
+		t.Fatalf("Unexpected error loading configurations from environment variable and defaults: %s", err)
+	}
 
-	assertEqual(t, config["man"], mane, "Expected mandatory environment config to be extracted")
-	assertEqual(t, config["opt"], opte, "Expected optional environment config to be extracted")
-	assertEqual(t, origin["man"], envOrig, "Expected mandatory config to be provided by environment")
-	assertEqual(t, origin["opt"], envOrig, "Expected optional config to be provided by environment")
+	expectedConfig := map[string]string{"man": mane, "opt": opte}
+	if !reflect.DeepEqual(config, expectedConfig) {
+		t.Error("Configurations don't match when loaded from environment variable and defaults")
+		t.Errorf("\nActual  : %#v", config)
+		t.Errorf("\nExpected: %#v", expectedConfig)
+	}
+
+	expectedOrigin := map[string]string{"man": envOrig, "opt": envOrig}
+	if !reflect.DeepEqual(origin, expectedOrigin) {
+		t.Error("Origins don't match when loaded from environment variable and defaults")
+		t.Errorf("\nActual  : %#v", origin)
+		t.Errorf("\nExpected: %#v", expectedOrigin)
+	}
 }
 
 func TestFlagParseError(t *testing.T) {
@@ -188,11 +278,17 @@ func TestFlagParseError(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load([]string{"-many", "-opty"}, sampleFlagsHandler)
-	requireError(t, err, "Expected error loading conf with bad flags")
-	assertContains(t, err.Error(), "conf.Load: error parsing flags: ", "Expected flag parse error message")
+	if expectedMsg := "conf.Load: error parsing flags: "; !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Invalid error message for improper flags")
+		t.Errorf("Actual       : %q", err)
+		t.Errorf("Expected part: %q", expectedMsg)
+	}
 
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for improper flags")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
 }
 
 func TestJSONFileReadError(t *testing.T) {
@@ -203,11 +299,17 @@ func TestJSONFileReadError(t *testing.T) {
 	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
 	config, origin, err := loader.load([]string{"-conf", "file-does-not-exist"}, sampleFlagsHandler)
-	requireError(t, err, "Expected error loading conf with non-existing JSON file")
-	assertContains(t, err.Error(), "conf.Load: error reading JSON file: ", "Expected JSON file read error message")
+	if expectedMsg := "conf.Load: error reading JSON file: "; !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Invalid error message for missing JSON file")
+		t.Errorf("Actual       : %q", err)
+		t.Errorf("Expected part: %q", expectedMsg)
+	}
 
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for missing JSON file")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
 }
 
 func TestJSONFileParseError(t *testing.T) {
@@ -222,11 +324,17 @@ func TestJSONFileParseError(t *testing.T) {
 	loader := &MultiLoader{Options: options, JSONKey: "conf"}
 
 	config, origin, err := loader.load([]string{"-conf", jsonFile}, sampleFlagsHandler)
-	requireError(t, err, "Expected error loading conf with malformed JSON file")
-	assertContains(t, err.Error(), "conf.Load: json: ", "Expected JSON file parse error message")
+	if expectedMsg := "conf.Load: json: "; !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Invalid error message for malformed JSON file")
+		t.Errorf("Actual       : %q", err)
+		t.Errorf("Expected part: %q", expectedMsg)
+	}
 
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for malformed JSON file")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
 }
 
 func TestMissingMandatoryConfigError(t *testing.T) {
@@ -241,17 +349,25 @@ func TestMissingMandatoryConfigError(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load(nil, sampleFlagsHandler)
-	requireError(t, err, "Expected error loading conf with missing mandatory configurations")
-	assertEqual(t, err.Error(), "conf.Load: missing mandatory configurations: man2, man3", "Expected missing mandatory configurations")
+	if expectedMsg := "conf.Load: missing mandatory configurations: man2, man3"; err.Error() != expectedMsg {
+		t.Error("Invalid error message for missing mandatory configurations")
+		t.Errorf("Actual  : %q", err)
+		t.Errorf("Expected: %q", expectedMsg)
+	}
 
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for missing mandatory configurations")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
 }
 
 func TestLoaderInterface(t *testing.T) {
 	interfaceType := reflect.TypeOf((*Loader)(nil)).Elem()
 	implements := reflect.TypeOf(&MultiLoader{}).Implements(interfaceType)
-	assertEqual(t, implements, true, "Expected MultiLoader to be a Loader")
+	if !implements {
+		t.Error("MultiLoader does not implement Loader")
+	}
 }
 
 func TestFuzzError1(t *testing.T) {
@@ -272,9 +388,16 @@ func TestFuzzError1(t *testing.T) {
 	loader := &MultiLoader{Options: options, JSONKey: "Ĺ"}
 
 	config, origin, err := loader.load(nil, sampleFlagsHandler)
-	requireError(t, err, "Expected error loading conf with empty configurations")
-	assertEqual(t, len(config), 0, "Expected configuration to not exist")
-	assertEqual(t, len(origin), 0, "Expected origin to not exist")
+
+	if err == nil {
+		t.Error("Unexpected success for invalid configuration")
+	}
+
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for invalid configuration")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
 }
 
 func sampleFlagsHandler(flags *flag.FlagSet) {

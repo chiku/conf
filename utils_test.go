@@ -2,6 +2,8 @@ package conf
 
 import (
 	"os"
+	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -10,35 +12,53 @@ func TestParseJSON(t *testing.T) {
 	defer os.Remove(jsonFile)
 
 	data, err := parseJSON(&jsonFile)
+	if err != nil {
+		t.Fatalf("Unexpected error parsing valid JSON file: %s", err)
+	}
 
-	requireNoError(t, err, "Expected no error parsing valid JSON")
 	expectedData := map[string]string{
 		"foo": "abc",
 		"bar": "xyz",
 	}
-	assertEqual(t, data, expectedData, "Expected JSON parse data to create a string map")
+	if !reflect.DeepEqual(data, expectedData) {
+		t.Error("Invalid parsed data")
+		t.Errorf("Actual:   %#v", data)
+		t.Errorf("Expected: %#v", expectedData)
+	}
 }
 
 func TestParseJSONWithoutFileName(t *testing.T) {
 	name := ""
-	emptyData, err := parseJSON(&name)
+	data, err := parseJSON(&name)
+	if err != nil {
+		t.Fatalf("Unexpected error parsing empty JSON file name: %s", err)
+	}
+	if len(data) != 0 {
+		t.Errorf("Unexpected data for empty JSON file name: %#v", data)
+	}
 
-	requireNoError(t, err, "Expected no error parsing empty JSON file name")
-	assertEqual(t, len(emptyData), 0, "Expected no JSON data")
-
-	nilData, err := parseJSON(nil)
-
-	requireNoError(t, err, "Expected no error parsing nil JSON file name")
-	assertEqual(t, len(nilData), 0, "Expected no JSON data")
+	data, err = parseJSON(nil)
+	if err != nil {
+		t.Errorf("Unexpected data for nil JSON file name: %s", err)
+	}
+	if len(data) != 0 {
+		t.Errorf("Unexpected data for nil JSON file name: %#v", data)
+	}
 }
 
 func TestParseJSONWithNonExistingFileName(t *testing.T) {
 	name := "does-not-exist"
 	data, err := parseJSON(&name)
 
-	requireError(t, err, "Expected error parsing non-existing JSON file name")
-	assertContains(t, err.Error(), "error reading JSON file: ", "Expected file does not exist error")
-	assertEqual(t, len(data), 0, "Expected no JSON data")
+	if expectedMsg := "error reading JSON file: "; !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Invalid error when parsing missing JSON file")
+		t.Errorf("\tActual:        %q", err)
+		t.Errorf("\tExpected part: %q", expectedMsg)
+	}
+
+	if len(data) != 0 {
+		t.Errorf("Unexpected data for missing JSON file: %#v", data)
+	}
 }
 
 func TestParseJSONWithMalformedJSON(t *testing.T) {
@@ -47,9 +67,15 @@ func TestParseJSONWithMalformedJSON(t *testing.T) {
 
 	data, err := parseJSON(&jsonFile)
 
-	requireError(t, err, "Expected error parsing malformed JSON file")
-	assertContains(t, err.Error(), "json: syntax error at offset 1: ", "Expected JSON parse error")
-	assertEqual(t, len(data), 0, "Expected no JSON data")
+	if expectedMsg := "json: syntax error at offset 1: "; !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Invalid error when parsing a file with malformed JSON")
+		t.Errorf("\tActual:        %q", err)
+		t.Errorf("\tExpected part: %q", expectedMsg)
+	}
+
+	if len(data) != 0 {
+		t.Errorf("Unexpected data for malformed JSON file: %#v", data)
+	}
 }
 
 func TestParseJSONWithNonStringJSONValues(t *testing.T) {
@@ -58,7 +84,13 @@ func TestParseJSONWithNonStringJSONValues(t *testing.T) {
 
 	data, err := parseJSON(&jsonFile)
 
-	requireError(t, err, "Expected error parsing malformed JSON file")
-	assertContains(t, err.Error(), "json: type error at offset 12: ", "Expected JSON parse error")
-	assertEqual(t, len(data), 0, "Expected no JSON data")
+	if expectedMsg := "json: type error at offset 12: "; !strings.Contains(err.Error(), expectedMsg) {
+		t.Error("Invalid error when parsing a file with JSON having non-string values")
+		t.Errorf("\tActual:        %q", err)
+		t.Errorf("\tExpected part: %q", expectedMsg)
+	}
+
+	if len(data) != 0 {
+		t.Errorf("Unexpected data for JSON file having non-string values: %#v", data)
+	}
 }
