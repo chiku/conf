@@ -3,3 +3,4 @@ test:
     - ./build.sh
     - ./coverage.sh
     - MAX_STEPS=500000 ./fuzz.sh
+    - ./lint.sh

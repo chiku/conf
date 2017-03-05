@@ -9,7 +9,11 @@ import (
 
 func TestParseJSON(t *testing.T) {
 	jsonFile := createFile(t, `{ "foo": "abc", "bar": "xyz" }`)
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	data, err := parseJSON(&jsonFile)
 	if err != nil {
@@ -63,7 +67,11 @@ func TestParseJSONWithNonExistingFileName(t *testing.T) {
 
 func TestParseJSONWithMalformedJSON(t *testing.T) {
 	jsonFile := createFile(t, "MALFORMED")
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	data, err := parseJSON(&jsonFile)
 
@@ -80,7 +88,11 @@ func TestParseJSONWithMalformedJSON(t *testing.T) {
 
 func TestParseJSONWithNonStringJSONValues(t *testing.T) {
 	jsonFile := createFile(t, `{"foo": true}`)
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	data, err := parseJSON(&jsonFile)
 

@@ -56,7 +56,11 @@ func TestLoadFromFlags(t *testing.T) {
 func TestLoadFromJSON(t *testing.T) {
 	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s" }`, manj, optj)
 	jsonFile := createFile(t, content)
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	options := map[string]Option{
 		"man": Option{Mandatory: true},
@@ -91,12 +95,20 @@ func TestLoadFromEnvironment(t *testing.T) {
 	if err := os.Setenv("man", mane); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("man")
+	defer func() {
+		if err := os.Unsetenv("man"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	if err := os.Setenv("opt", opte); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("opt")
+	defer func() {
+		if err := os.Unsetenv("opt"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	options := map[string]Option{
 		"man": Option{Mandatory: true},
@@ -154,17 +166,29 @@ func TestLoadFromDefaults(t *testing.T) {
 func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s" }`, manj, optj)
 	jsonFile := createFile(t, content)
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	if err := os.Setenv("man", mane); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("man")
+	defer func() {
+		if err := os.Unsetenv("man"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	if err := os.Setenv("opt", opte); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("opt")
+	defer func() {
+		if err := os.Unsetenv("opt"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	options := map[string]Option{
 		"man": Option{Default: mand, Mandatory: true},
@@ -195,17 +219,29 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 	content := fmt.Sprintf(`{ "man": "%s", "opt": "%s" }`, manj, optj)
 	jsonFile := createFile(t, content)
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	if err := os.Setenv("man", mane); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("man")
+	defer func() {
+		if err := os.Unsetenv("man"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	if err := os.Setenv("opt", opte); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("opt")
+	defer func() {
+		if err := os.Unsetenv("opt"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	options := map[string]Option{
 		"man": Option{Default: mand, Mandatory: true},
@@ -237,12 +273,20 @@ func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
 	if err := os.Setenv("man", mane); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("man")
+	defer func() {
+		if err := os.Unsetenv("man"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	if err := os.Setenv("opt", opte); err != nil {
 		t.Fatalf("Unexpected error setting environment variable: %s", err)
 	}
-	defer os.Unsetenv("opt")
+	defer func() {
+		if err := os.Unsetenv("opt"); err != nil {
+			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
+		}
+	}()
 
 	options := map[string]Option{
 		"man": Option{Default: mand, Mandatory: true},
@@ -315,7 +359,11 @@ func TestJSONFileReadError(t *testing.T) {
 func TestJSONFileParseError(t *testing.T) {
 	content := "bad-json"
 	jsonFile := createFile(t, content)
-	defer os.Remove(jsonFile)
+	defer func() {
+		if err := os.Remove(jsonFile); err != nil {
+			t.Fatalf("Unexpected error deleting temporary file: %s", err)
+		}
+	}()
 
 	options := map[string]Option{
 		"man": Option{Mandatory: true},
