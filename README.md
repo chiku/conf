@@ -1,6 +1,6 @@
 # conf
 
-[![Build Status](https://github.com/chiku/conf/actions)](https://github.com/chiku/conf/actions/workflows/build.yml/badge.svg)
+[![Build Status](https://github.com/chiku/conf/actions/workflows/build.yml/badge.svg)](https://github.com/chiku/conf/actions)
 [![Build Status](https://travis-ci.org/chiku/conf.svg?branch=master)](https://travis-ci.org/chiku/conf)
 [![Build Status](https://circleci.com/gh/chiku/conf.svg?style=svg)](https://circleci.com/gh/chiku/conf)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/chiku/conf)
