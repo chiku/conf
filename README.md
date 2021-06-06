@@ -1,5 +1,6 @@
 # conf
 
+[![Build Status](https://github.com/chiku/conf/actions)](https://github.com/chiku/conf/actions/workflows/build.yml/badge.svg)
 [![Build Status](https://travis-ci.org/chiku/conf.svg?branch=master)](https://travis-ci.org/chiku/conf)
 [![Build Status](https://circleci.com/gh/chiku/conf.svg?style=svg)](https://circleci.com/gh/chiku/conf)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/chiku/conf)
@@ -11,7 +12,6 @@ Development prerequisites
 -------------------------
 
 * [Install golang](https://golang.org/doc/install)
-* Add `$GOPATH/bin` to `PATH`
 
 Running tests
 -------------
@@ -20,22 +20,18 @@ Running tests
 # unit tests
 ./build.sh
 
+# lints
+./lint.sh
+
+
 # fuzzy tests
 ./fuzz.sh
 ```
+
 Documentation
 -------------
 
 Refer https://godoc.org/github.com/chiku/conf
-
-Contributing
-------------
-
-* Fork the project.
-* Make your feature addition or bug fix.
-* Add tests for it. This is important so I don't break it in a future version unintentionally.
-* Commit, but do not mess with the VERSION. If you want to have your own version, that is fine but bump the version in a commit by itself in another branch so I can ignore it when I pull.
-* Send me a pull request.
 
 License
 -------

@@ -3,6 +3,6 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-go get -u github.com/alecthomas/gometalinter
-gometalinter --install
-gometalinter -t --vendor . --deadline 1m
+mkdir -p out/
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b ./out v1.40.1
+./out/golangci-lint run ./... --deadline 1m

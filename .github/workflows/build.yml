@@ -1,0 +1,36 @@
+name: build
+
+on:
+  push:
+  pull_request:
+  release:
+
+jobs:
+  build:
+    name: "Ubuntu go ${{ matrix.go }}"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        go: ["1.13", "1.14", "1.15", "1.16"]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go }}
+
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          args: --deadline 1m
+
+      - name: Test
+        shell: bash
+        run: ./build.sh
+
+      - name: Fuzz
+        shell: bash
+        run: MAX_STEPS=500000 go test -v . -timeout 1h -tags fuzz

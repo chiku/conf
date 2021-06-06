@@ -429,9 +429,9 @@ func TestFuzzError1(t *testing.T) {
 		"固[飳Ɛ茞燂Yi衮ɼO榲\u00adȾ": Option{Mandatory: true},
 		"鮀ȯIÏ忞":               Option{Mandatory: true},
 		"Rl:O":                Option{},
-		"^4uſǖʈƩʟǑȶªIƙǨ鋜": Option{},
-		"e郊Ɔ鏬挋眖筎:ûǽǬ鴜Ȃ":   Option{},
-		"i莝á沷俜ƦǱ缘Ín痐U":    Option{},
+		"^4uſǖʈƩʟǑȶªIƙǨ鋜":     Option{},
+		"e郊Ɔ鏬挋眖筎:ûǽǬ鴜Ȃ":       Option{},
+		"i莝á沷俜ƦǱ缘Ín痐U":        Option{},
 	}
 	loader := &MultiLoader{Options: options, JSONKey: "Ĺ"}
 
