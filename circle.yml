@@ -1,6 +1,0 @@
-test:
-  override:
-    - ./build.sh
-    - ./lint.sh
-    - ./coverage.sh
-    - MAX_STEPS=500000 ./fuzz.sh
