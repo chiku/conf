@@ -1,7 +1,0 @@
-language: go
-script:
-- "./build.sh"
-- "./coverage.sh"
-env:
-  global:
-    secure: dOupRaNSp9hwsB69XLE4K5vy6nksl7So1Ri3qpR7JEZ0GtFa6/Yh1BwVI2hmg8H7YaCNb1fL/+uo4x7WmHinv7TOZc/dBN8aTZbp8gFSjHABpunlQ8LfV0f+dT4VP5ir9AuybbY8Q+UaBwkO1u5Pt9hVTB4FTQqjhBwBfAp65jlPjjaOhsKArZNOcxOe0ZkwC1WI1DD0KiKuJHzjXAXsrsp4+lZlQ+Fk+wL1krBj8iOM+nG6t5v84a1KnEgL7wfr9Py15hFB6opcsePs9fkzBb+ZFpeepXre/o2y1hCGLdFFXzZlKgwDZhiy2NaKlxMVk/LPNChsvWVAOBaFV3mq2nF2I1Jh3NdvJBCQzXaiFClEzMOEb1aOnJ6Qj8n/H46e9Fq1v+0hX+wMjn8+y0m/KhMpHq3k/fJgK9LOfYobD3UVGfuh8l7YBtYOwaFU/I3es85WvTvJLcK2VolKwYrcUs5f+0s39rTx/SyUvk5yGIXpL3GNGsOKQ9J9TuKCSrwuQczGhz+Tr1BBWxd9suDNCSJNAq4i4S/0/+RUbfZorLJgw5p0tWiopm7ysOV/guxUAZ90ioqMFgk5jKnaUf5tScZPftnRypVqG9dLJtzZy8StzckBlyQr4rMywZGxyTYeJ/zyIrmhBBO7LW6+KvghJgdwq51WLp64gQ2ulVI5fVQ=

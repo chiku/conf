@@ -2,6 +2,7 @@ package conf
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 )
@@ -18,20 +19,22 @@ func parseJSON(file *string) (map[string]string, error) {
 
 	content, err := ioutil.ReadFile(*file)
 	if err != nil {
-		return nil, fmt.Errorf("error reading JSON file: %s", err)
+		return nil, fmt.Errorf("error reading JSON file: %w", err)
 	}
 
 	err = json.Unmarshal(content, &config)
 	if err != nil {
-		if serr, ok := err.(*json.SyntaxError); ok {
-			return nil, fmt.Errorf("json: syntax error at offset %d: %s", serr.Offset, err)
+		var syntaxErr *json.SyntaxError
+		if errors.As(err, &syntaxErr) {
+			return nil, fmt.Errorf("json: syntax error at offset %d: %w", syntaxErr.Offset, err)
 		}
 
-		if terr, ok := err.(*json.UnmarshalTypeError); ok {
-			return nil, fmt.Errorf("json: type error at offset %d: %s", terr.Offset, err)
+		var typeErr *json.UnmarshalTypeError
+		if errors.As(err, &typeErr) {
+			return nil, fmt.Errorf("json: type error at offset %d: %w", typeErr.Offset, err)
 		}
 
-		return nil, fmt.Errorf("json: %s", err)
+		return nil, fmt.Errorf("json: %w", err)
 	}
 
 	return config, nil

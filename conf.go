@@ -4,46 +4,45 @@
 //
 // example.go
 //
-//  import (
-//      "fmt"
+//	import (
+//	    "fmt"
 //
-//      "github.com/chiku/conf"
-//  )
+//	    "github.com/chiku/conf"
+//	)
 //
-//  func main() {
-//      options := map[string]conf.Option{
-//          "foo": conf.Option{
-//              Desc:      "a description for foo",
-//              Default:   "default foo",
-//              Mandatory: true,
-//          }
-//          "bar": conf.Option{Mandatory: true},
-//          "baz": conf.Option{Desc: "a description for baz"},
-//          "qux": conf.Option{},
-//      }
+//	func main() {
+//	    options := map[string]conf.Option{
+//	        "foo": conf.Option{
+//	            Desc:      "a description for foo",
+//	            Default:   "default foo",
+//	            Mandatory: true,
+//	        }
+//	        "bar": conf.Option{Mandatory: true},
+//	        "baz": conf.Option{Desc: "a description for baz"},
+//	        "qux": conf.Option{},
+//	    }
 //
-//      loader := conf.MultiLoader{
-//          JSONKey: "shr",
-//          Options: options,
-//          Usage:   "Example application",
-//      }
+//	    loader := conf.MultiLoader{
+//	        JSONKey: "shr",
+//	        Options: options,
+//	        Usage:   "Example application",
+//	    }
 //
-//      config, origin, err := loader.Load()
+//	    config, origin, err := loader.Load()
 //
-//      if err != nil {
-//          fmt.Printf("error: %s\n", err)
-//          return
-//      }
+//	    if err != nil {
+//	        fmt.Printf("error: %s\n", err)
+//	        return
+//	    }
 //
-//      fmt.Printf("configuration: %#v\n", config)
-//      fmt.Printf("origin: %#v\n", origin)
-//  }
+//	    fmt.Printf("configuration: %#v\n", config)
+//	    fmt.Printf("origin: %#v\n", origin)
+//	}
 //
 // Usage
 //
-//     go build -o example example.go
-//     ./example -foo fooval -bar barval -shr file.json
-//
+//	go build -o example example.go
+//	./example -foo fooval -bar barval -shr file.json
 package conf
 
 import (
@@ -61,7 +60,7 @@ type Loader interface {
 	Load() (config map[string]string, origin map[string]string, err error)
 }
 
-// An Option represents a configuration for github.com/chiku/conf
+// An Option represents a configuration for github.com/chiku/conf.
 type Option struct {
 	// Default is the value used if not provided in command-line flag,
 	// JSON file or environment variable.
@@ -94,19 +93,19 @@ type MultiLoader struct {
 // Load extracts configuration from different sources. It returns the
 // configuration and their origin, and an error if present.
 // The configurations are loaded in following order.
-//   1. Command-line arguments
-//   2. JSON file mentioned in JSONKey
-//   3. Environment variable
-//   4. Default values.
+//  1. Command-line arguments
+//  2. JSON file mentioned in JSONKey
+//  3. Environment variable
+//  4. Default values.
 //
 // The origin is returned as a string and can be one of "Flags", "JSON",
 // "Environment" or "Defaults"
 // based on what was matched when looking up for the configuration.
 // The configuration is always returned as a map[string]string.
 // Load() returns an error in the following cases.
-//   1. Command-line argument parse fails.
-//   2. JSON parse fails.
-//   3. Mandatory configuration was not provided.
+//  1. Command-line argument parse fails.
+//  2. JSON parse fails.
+//  3. Mandatory configuration was not provided.
 func (l MultiLoader) Load() (config map[string]string, origin map[string]string, err error) {
 	program, args := os.Args[0], os.Args[1:]
 	flagsHandler := func(flags *flag.FlagSet) {
@@ -122,38 +121,81 @@ func (l MultiLoader) Load() (config map[string]string, origin map[string]string,
 
 // load extracts configuration from different sources. It returns the
 // configuration and their origin, and an error if present.
-func (l MultiLoader) load(args []string, flagsHandler func(flags *flag.FlagSet)) (config map[string]string, origin map[string]string, err error) {
-	config = make(map[string]string)
-	origin = make(map[string]string)
+func (l MultiLoader) load(
+	args []string,
+	flagsHandler func(flags *flag.FlagSet),
+) (config map[string]string, origin map[string]string, err error) {
+	if err := l.validate(); err != nil {
+		return nil, nil, fmt.Errorf("conf.Load: %w", err)
+	}
 
 	flagVals, err := l.parseFlags(args, flagsHandler)
 	if err != nil {
-		return nil, nil, fmt.Errorf("conf.Load: %s", err)
+		return nil, nil, fmt.Errorf("conf.Load: %w", err)
 	}
 
 	jsonFile := flagVals[l.JSONKey]
 	jsonConfig, err := parseJSON(jsonFile)
 	if err != nil {
-		return nil, nil, fmt.Errorf("conf.Load: %s", err)
+		return nil, nil, fmt.Errorf("conf.Load: %w", err)
 	}
+
+	config = make(map[string]string)
+	origin = make(map[string]string)
 
 	l.configure(config, origin, func(key string) string { return *flagVals[key] }, "Flags")
 	l.configure(config, origin, func(key string) string { return jsonConfig[key] }, "JSON")
-	l.configure(config, origin, func(key string) string { return os.Getenv(key) }, "Environment")
+	l.configure(config, origin, os.Getenv, "Environment")
 	l.configure(config, origin, func(key string) string { return l.Options[key].Default }, "Defaults")
 
 	if err = l.verifyMandatoryPresent(config); err != nil {
-		return nil, nil, fmt.Errorf("conf.Load: %s", err)
+		return nil, nil, fmt.Errorf("conf.Load: %w", err)
 	}
 
 	return config, origin, nil
+}
+
+// validate checks that Options keys do not contain equals (=) and do not start
+// with minus (-). If JSONKey is present, it validates does not contain
+// equals (=) and does not start with minus (-).
+func (l MultiLoader) validate() error {
+	if jsonKey := l.JSONKey; strings.Contains(l.JSONKey, "=") {
+		return fmt.Errorf("JSONKey cannot contain '=': %s", jsonKey)
+	}
+	if jsonKey := l.JSONKey; strings.HasPrefix(l.JSONKey, "-") {
+		return fmt.Errorf("JSONKey cannot start with '-': %s", jsonKey)
+	}
+
+	var optionsWithEquals []string
+	var optionsStartingWithMinus []string
+	for name := range l.Options {
+		if strings.Contains(name, "=") {
+			optionsWithEquals = append(optionsWithEquals, name)
+		}
+		if strings.HasPrefix(name, "-") {
+			optionsStartingWithMinus = append(optionsStartingWithMinus, name)
+		}
+	}
+	if len(optionsWithEquals) > 0 {
+		sort.Strings(optionsWithEquals)
+		return fmt.Errorf("Options cannot contain '=': %s", strings.Join(optionsWithEquals, ", "))
+	}
+	if len(optionsStartingWithMinus) > 0 {
+		sort.Strings(optionsStartingWithMinus)
+		return fmt.Errorf("Options cannot start with '-': %s", strings.Join(optionsStartingWithMinus, ", "))
+	}
+
+	return nil
 }
 
 // parseFlags parses application-level command-line flags. The flags
 // are based on the configuration value and JSON-key flag. It returns
 // the parsed values as a map of string to pointer of strings and an
 // error if parse fails.
-func (l MultiLoader) parseFlags(args []string, flagsHandler func(*flag.FlagSet)) (flagVals map[string]*string, err error) {
+func (l MultiLoader) parseFlags(
+	args []string,
+	flagsHandler func(*flag.FlagSet),
+) (flagVals map[string]*string, err error) {
 	flags := flag.NewFlagSet("", flag.ContinueOnError)
 	flagsHandler(flags)
 
@@ -172,7 +214,7 @@ func (l MultiLoader) parseFlags(args []string, flagsHandler func(*flag.FlagSet))
 
 	err = flags.Parse(args)
 	if err != nil {
-		return nil, fmt.Errorf("error parsing flags: %s", err)
+		return nil, fmt.Errorf("error parsing flags: %w", err)
 	}
 
 	return flagVals, nil

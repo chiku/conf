@@ -12,19 +12,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.13", "1.14", "1.15", "1.16"]
+        go: ["1.17", "1.18", "1.19", "1.20", "1.21"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Setup go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go }}
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v2
+        uses: golangci/golangci-lint-action@v3
         with:
+          version: v1.55.2
           args: --deadline 1m
 
       - name: Test

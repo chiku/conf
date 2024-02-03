@@ -10,12 +10,14 @@ import (
 // The caller is expected to delete the created file.
 // The test aborts on failure.
 func createFile(t *testing.T, content string) string {
+	t.Helper()
+
 	tmpfile, err := ioutil.TempFile("", "example")
 	if err != nil {
 		t.Fatalf("Unexpected error creating temporary file: %s", err)
 	}
 
-	_, err = tmpfile.Write([]byte(content))
+	_, err = tmpfile.WriteString(content)
 	if err != nil {
 		t.Fatalf("Unexpected error writing to temporary file: %s", err)
 	}

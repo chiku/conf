@@ -92,23 +92,8 @@ func TestLoadFromJSON(t *testing.T) {
 }
 
 func TestLoadFromEnvironment(t *testing.T) {
-	if err := os.Setenv("man", mane); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("man"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
-
-	if err := os.Setenv("opt", opte); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("opt"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
+	t.Setenv("man", mane)
+	t.Setenv("opt", opte)
 
 	options := map[string]Option{
 		"man": Option{Mandatory: true},
@@ -172,23 +157,8 @@ func TestLoadFromFlagsHasHighestPriority(t *testing.T) {
 		}
 	}()
 
-	if err := os.Setenv("man", mane); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("man"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
-
-	if err := os.Setenv("opt", opte); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("opt"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
+	t.Setenv("man", mane)
+	t.Setenv("opt", opte)
 
 	options := map[string]Option{
 		"man": Option{Default: mand, Mandatory: true},
@@ -225,23 +195,8 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 		}
 	}()
 
-	if err := os.Setenv("man", mane); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("man"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
-
-	if err := os.Setenv("opt", opte); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("opt"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
+	t.Setenv("man", mane)
+	t.Setenv("opt", opte)
 
 	options := map[string]Option{
 		"man": Option{Default: mand, Mandatory: true},
@@ -270,23 +225,8 @@ func TestLoadFromJSONHasPriorityOverEnvironmentAndDefaults(t *testing.T) {
 }
 
 func TestLoadFromEnvironmentHasPriorityOverDefaults(t *testing.T) {
-	if err := os.Setenv("man", mane); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("man"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
-
-	if err := os.Setenv("opt", opte); err != nil {
-		t.Fatalf("Unexpected error setting environment variable: %s", err)
-	}
-	defer func() {
-		if err := os.Unsetenv("opt"); err != nil {
-			t.Fatalf("Unexpected error unsetting environment variable: %s", err)
-		}
-	}()
+	t.Setenv("man", mane)
+	t.Setenv("opt", opte)
 
 	options := map[string]Option{
 		"man": Option{Default: mand, Mandatory: true},
@@ -330,6 +270,82 @@ func TestFlagParseError(t *testing.T) {
 
 	if len(config) != 0 || len(origin) != 0 {
 		t.Error("Unexpected invalid values for improper flags")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
+}
+
+func TestOptionKeyWithEqualsError(t *testing.T) {
+	options := map[string]Option{
+		"man=":  Option{Desc: "mandatory item", Mandatory: true},
+		"opt=1": Option{},
+	}
+	loader := &MultiLoader{Options: options}
+
+	config, origin, err := loader.load([]string{}, sampleFlagsHandler)
+	if expectedMsg := "conf.Load: Options cannot contain '=': man=, opt=1"; err.Error() != expectedMsg {
+		t.Error("Invalid error message for invalid options")
+		t.Errorf("Actual  : %q", err)
+		t.Errorf("Expected: %q", expectedMsg)
+	}
+
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for invalid options")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
+}
+
+func TestOptionKeyStartingWithMinusError(t *testing.T) {
+	options := map[string]Option{
+		"-man": Option{Desc: "mandatory item", Mandatory: true},
+		"-opt": Option{},
+	}
+	loader := &MultiLoader{Options: options}
+
+	config, origin, err := loader.load([]string{}, sampleFlagsHandler)
+	if expectedMsg := "conf.Load: Options cannot start with '-': -man, -opt"; err.Error() != expectedMsg {
+		t.Error("Invalid error message for invalid options")
+		t.Errorf("Actual  : %q", err)
+		t.Errorf("Expected: %q", expectedMsg)
+	}
+
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for invalid options")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
+}
+
+func TestJSONKeyWithEqualsError(t *testing.T) {
+	loader := &MultiLoader{JSONKey: "file=1"}
+
+	config, origin, err := loader.load([]string{}, sampleFlagsHandler)
+	if expectedMsg := "conf.Load: JSONKey cannot contain '=': file=1"; err.Error() != expectedMsg {
+		t.Error("Invalid error message for invalid options")
+		t.Errorf("Actual  : %q", err)
+		t.Errorf("Expected: %q", expectedMsg)
+	}
+
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for invalid options")
+		t.Errorf("Config: %#v", config)
+		t.Errorf("Origin: %#v", origin)
+	}
+}
+
+func TestJSONKeyStartingWithMinusError(t *testing.T) {
+	loader := &MultiLoader{JSONKey: "-file"}
+
+	config, origin, err := loader.load([]string{}, sampleFlagsHandler)
+	if expectedMsg := "conf.Load: JSONKey cannot start with '-': -file"; err.Error() != expectedMsg {
+		t.Error("Invalid error message for invalid options")
+		t.Errorf("Actual  : %q", err)
+		t.Errorf("Expected: %q", expectedMsg)
+	}
+
+	if len(config) != 0 || len(origin) != 0 {
+		t.Error("Unexpected invalid values for invalid options")
 		t.Errorf("Config: %#v", config)
 		t.Errorf("Origin: %#v", origin)
 	}

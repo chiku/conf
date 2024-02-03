@@ -1,11 +1,9 @@
-// +build fuzz
+//go:build fuzz
 
 package conf
 
 import (
-	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"runtime/debug"
 	"strconv"
@@ -69,10 +67,4 @@ func TestConfFuzzRandom(t *testing.T) {
 		}
 	}
 	fmt.Fprintf(os.Stderr, "\nComplete...\n")
-}
-
-func suppressedUsage(flags *flag.FlagSet) func() {
-	return func() {
-		flags.SetOutput(ioutil.Discard)
-	}
 }
