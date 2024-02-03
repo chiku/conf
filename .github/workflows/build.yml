@@ -32,6 +32,17 @@ jobs:
         shell: bash
         run: ./build.sh
 
+      - name: Update coverage report
+        uses: ncruces/go-coverage-report@v0
+        with:
+          report: true
+          chart: true
+          amend: true
+        if: |
+          matrix.go == '1.21' &&
+          github.event_name == 'push'
+        continue-on-error: true
+
       - name: Fuzz
         shell: bash
         run: MAX_STEPS=500000 go test -v . -timeout 1h -tags fuzz

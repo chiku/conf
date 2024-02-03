@@ -2,7 +2,7 @@
 
 [![Build Status](https://github.com/chiku/conf/actions/workflows/build.yml/badge.svg)](https://github.com/chiku/conf/actions)
 [![GoDoc](https://img.shields.io/badge/godoc-reference-blue.svg)](https://godoc.org/github.com/chiku/conf)
-[![Coverage Status](https://img.shields.io/badge/Coverage-Run-green.svg)](http://gocover.io/github.com/chiku/conf)
+[![Coverage](https://github.com/chiku/conf/wiki/coverage.svg)](https://raw.githack.com/wiki/chiku/conf/coverage.html)
 [![Software License](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/chiku/conf/blob/master/LICENSE)
 
 Development prerequisites
