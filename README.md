@@ -20,7 +20,6 @@ Running tests
 # lints
 ./lint.sh
 
-
 # fuzzy tests
 ./fuzz.sh
 ```
