@@ -27,7 +27,7 @@ Running tests
 Documentation
 -------------
 
-The minimum supported go version by `conf` is 1.17.
+The minimum supported go version by `conf` is 1.26.
 
 Refer https://godoc.org/github.com/chiku/conf
 

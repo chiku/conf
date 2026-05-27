@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"os"
 )
 
 // parseJSON parses a JSON file with the given name into a map of key-value
@@ -17,7 +17,7 @@ func parseJSON(file *string) (map[string]string, error) {
 		return nil, nil
 	}
 
-	content, err := ioutil.ReadFile(*file)
+	content, err := os.ReadFile(*file)
 	if err != nil {
 		return nil, fmt.Errorf("error reading JSON file: %w", err)
 	}

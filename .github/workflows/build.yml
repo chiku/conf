@@ -12,21 +12,21 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go: ["1.17", "1.18", "1.19", "1.20", "1.21"]
+        go: ["1.26"]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v6
 
       - name: Setup go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
           go-version: ${{ matrix.go }}
 
       - name: Lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v1.55.2
-          args: --deadline 1m
+          version: v2.11.4
+          args: --timeout 1m
 
       - name: Test
         shell: bash
@@ -39,7 +39,7 @@ jobs:
           chart: true
           amend: true
         if: |
-          matrix.go == '1.21' &&
+          matrix.go == '1.26' &&
           github.event_name == 'push'
         continue-on-error: true
 

@@ -178,11 +178,11 @@ func (l MultiLoader) validate() error {
 	}
 	if len(optionsWithEquals) > 0 {
 		sort.Strings(optionsWithEquals)
-		return fmt.Errorf("Options cannot contain '=': %s", strings.Join(optionsWithEquals, ", "))
+		return fmt.Errorf("options cannot contain '=': %s", strings.Join(optionsWithEquals, ", "))
 	}
 	if len(optionsStartingWithMinus) > 0 {
 		sort.Strings(optionsStartingWithMinus)
-		return fmt.Errorf("Options cannot start with '-': %s", strings.Join(optionsStartingWithMinus, ", "))
+		return fmt.Errorf("options cannot start with '-': %s", strings.Join(optionsStartingWithMinus, ", "))
 	}
 
 	return nil

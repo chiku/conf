@@ -3,7 +3,7 @@ package conf
 import (
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"reflect"
 	"strings"
@@ -283,7 +283,7 @@ func TestOptionKeyWithEqualsError(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load([]string{}, sampleFlagsHandler)
-	if expectedMsg := "conf.Load: Options cannot contain '=': man=, opt=1"; err.Error() != expectedMsg {
+	if expectedMsg := "conf.Load: options cannot contain '=': man=, opt=1"; err.Error() != expectedMsg {
 		t.Error("Invalid error message for invalid options")
 		t.Errorf("Actual  : %q", err)
 		t.Errorf("Expected: %q", expectedMsg)
@@ -304,7 +304,7 @@ func TestOptionKeyStartingWithMinusError(t *testing.T) {
 	loader := &MultiLoader{Options: options}
 
 	config, origin, err := loader.load([]string{}, sampleFlagsHandler)
-	if expectedMsg := "conf.Load: Options cannot start with '-': -man, -opt"; err.Error() != expectedMsg {
+	if expectedMsg := "conf.Load: options cannot start with '-': -man, -opt"; err.Error() != expectedMsg {
 		t.Error("Invalid error message for invalid options")
 		t.Errorf("Actual  : %q", err)
 		t.Errorf("Expected: %q", expectedMsg)
@@ -465,5 +465,5 @@ func TestFuzzError1(t *testing.T) {
 }
 
 func sampleFlagsHandler(flags *flag.FlagSet) {
-	flags.SetOutput(ioutil.Discard)
+	flags.SetOutput(io.Discard)
 }

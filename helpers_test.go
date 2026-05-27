@@ -1,7 +1,7 @@
 package conf
 
 import (
-	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -12,7 +12,7 @@ import (
 func createFile(t *testing.T, content string) string {
 	t.Helper()
 
-	tmpfile, err := ioutil.TempFile("", "example")
+	tmpfile, err := os.CreateTemp("", "example")
 	if err != nil {
 		t.Fatalf("Unexpected error creating temporary file: %s", err)
 	}
